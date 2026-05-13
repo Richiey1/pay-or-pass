@@ -114,6 +114,13 @@ export default function Home() {
       <div className="max-w-2xl mx-auto pt-12">
         {/* Header */}
         <div className="text-center mb-12">
+          <div className="flex justify-center mb-6">
+            <img 
+              src="/paynpass-logo.svg" 
+              alt="PayOrPass Logo" 
+              className="h-24 w-auto drop-shadow-[0_0_15px_rgba(34,197,94,0.3)]" 
+            />
+          </div>
           <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-green-400 to-teal-300 bg-clip-text text-transparent">
             PayOrPass
           </h1>
