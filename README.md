@@ -1,18 +1,6 @@
 # 🎮 Celo PayOrPass — Game-Theoretic Social Payment Escrow
 
-<div align="center">
-
-[![Next.js](https://img.shields.io/badge/Next.js-15.5.7-000000?style=flat-square&logo=nextdotjs)](https://nextjs.org)
-[![Solidity](https://img.shields.io/badge/Solidity-^0.8.20-363636?style=flat-square&logo=solidity)](https://soliditylang.org)
-[![Network](https://img.shields.io/badge/Celo-Testnet-16D14E?style=flat-square&logo=celo)](https://celo.org)
-[![Tests](https://img.shields.io/badge/Tests-9%20passing-success?style=flat-square)](https://github.com/Richiey1/pay-or-pass)
-[![License](https://img.shields.io/badge/License-MIT-blue?style=flat-square)](https://opensource.org/licenses/MIT)
-
-**Turn passive Web3 transactions into high-stakes social coordinate games. One transaction → multiple behavioral outcomes.**
-
-[Explore Live Terminal](https://payorpass.vercel.app/) • [Review Verified Contract](https://alfajores.celoscan.io/address/0xeacf08b103e33b66444444444444444444444444)
-
-</div>
+**A game-theoretic social payment escrow protocol on Celo.**
 
 ---
 
