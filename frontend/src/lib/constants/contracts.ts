@@ -1,5 +1,5 @@
 // Standardized Contract Constants for PayOrPass on Celo
-export const CONTRACT_ADDRESS = '0xa87103254B860E8ad2EAcD2EAcD2EAcD2EAcD2EA'; // Default fallback, customizable in env
+export const CONTRACT_ADDRESS = '0xFbE03Cb7F2B41A741b496713727d85E4f9B98B07'; // Newly deployed Celo Mainnet contract address
 
 export const PAY_OR_PASS_ABI = [
   "function createChain(address token, uint256 amount) external payable returns (uint256)",
