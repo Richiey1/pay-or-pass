@@ -8,7 +8,7 @@ async function sleep(ms: number): Promise<void> {
 }
 
 async function main() {
-  console.log("🎮 Deploying BlOcXTacToe contract...\n");
+  console.log("🎮 Deploying PayOrPass contract...\n");
 
   const [deployer] = await ethers.getSigners();
   const network = await ethers.provider.getNetwork();
@@ -22,43 +22,44 @@ async function main() {
   console.log("Starting deployment with nonce:", nonce, "\n");
 
   try {
-    // Deploy BlOcXTacToe contract
-    console.log("Deploying BlOcXTacToe contract...");
-    const BlOcXTacToe = await ethers.getContractFactory("BlOcXTacToe");
-    const blocXTacToe = await BlOcXTacToe.deploy();
+    // Constructor Arguments: 1 hour defaultTimeout, 12000 defaultMultiplier (120%)
+    const defaultTimeout = 3600; 
+    const defaultMultiplier = 12000;
+
+    console.log("Deploying PayOrPass contract...");
+    const PayOrPass = await ethers.getContractFactory("PayOrPass");
+    const payOrPass = await PayOrPass.deploy(defaultTimeout, defaultMultiplier);
     
     console.log("Waiting for deployment confirmation...");
-    await blocXTacToe.waitForDeployment();
+    await payOrPass.waitForDeployment();
     
-    const contractAddress = await blocXTacToe.getAddress();
-    console.log("✅ BlOcXTacToe deployed to:", contractAddress);
+    const contractAddress = await payOrPass.getAddress();
+    console.log("✅ PayOrPass deployed to:", contractAddress);
 
     // Get deployment transaction and wait for confirmation
-    const deployTx = blocXTacToe.deploymentTransaction();
+    const deployTx = payOrPass.deploymentTransaction();
     if (deployTx) {
       console.log("Deployment transaction hash:", deployTx.hash);
       console.log("Waiting for transaction confirmation (waiting for 2 block confirmations)...");
       
-      // Wait for transaction to be mined with 2 confirmations
       const receipt = await deployTx.wait(2);
       console.log("✅ Transaction confirmed in block:", receipt.blockNumber);
       
-      // Wait a bit more for network to settle (5 seconds)
       console.log("Waiting for network to settle...");
       await sleep(5000);
       
-      // Verify the contract is actually deployed by checking its owner
+      // Verify owner
       try {
-        const owner = await blocXTacToe.owner();
-        console.log("✅ Contract verified - Owner:", owner);
+        const owner = await payOrPass.owner();
+        console.log("✅ Contract owner verified:", owner);
       } catch (error) {
-        console.warn("⚠️  Could not verify contract owner (contract may still be propagating)");
+        console.warn("⚠️ Could not verify contract owner yet.");
       }
     }
 
-    // Get deployment info
+    // Save deployment info
     const deploymentInfo = {
-      contractName: "BlOcXTacToe",
+      contractName: "PayOrPass",
       address: contractAddress,
       deployer: deployer.address,
       network: network.name,
@@ -66,23 +67,18 @@ async function main() {
       transactionHash: deployTx?.hash || "N/A",
       timestamp: new Date().toISOString(),
       blockNumber: await ethers.provider.getBlockNumber(),
-      // Contract details
-      moveTimeout: "24 hours (configurable)",
-      platformFeePercent: "0% (configurable)",
-      constructorArgs: [] // No constructor arguments
+      constructorArgs: [defaultTimeout, defaultMultiplier]
     };
 
     console.log("\n=== DEPLOYMENT SUMMARY ===");
-    console.log("Contract Name: BlOcXTacToe");
+    console.log("Contract Name: PayOrPass");
     console.log("Address:", contractAddress);
     console.log("Network:", network.name, "(Chain ID:", network.chainId.toString(), ")");
     console.log("Deployer:", deployer.address);
     console.log("Transaction Hash:", deployTx?.hash || "N/A");
     console.log("Block Number:", deploymentInfo.blockNumber);
-    console.log("Timestamp:", deploymentInfo.timestamp);
     console.log("=========================\n");
 
-    // Save deployment info to JSON file
     const deploymentDir = path.join(__dirname, "../deployments");
     if (!fs.existsSync(deploymentDir)) {
       fs.mkdirSync(deploymentDir, { recursive: true });
@@ -92,28 +88,13 @@ async function main() {
     fs.writeFileSync(deploymentFile, JSON.stringify(deploymentInfo, null, 2));
     console.log("✅ Deployment info saved to:", deploymentFile);
 
-    // Also save to root deployment.json for easy access
     const rootDeploymentFile = path.join(__dirname, "../deployment.json");
     fs.writeFileSync(rootDeploymentFile, JSON.stringify(deploymentInfo, null, 2));
     console.log("✅ Deployment info also saved to: deployment.json");
 
     console.log("\n🎉 Deployment completed successfully!");
-    console.log("\nNext steps:");
-    console.log("1. Update your .env file with the contract address:");
-    console.log(`   NEXT_PUBLIC_CONTRACT_ADDRESS=${contractAddress}`);
-    console.log("\n2. Verify the contract:");
-    console.log(`   npx hardhat verify --network ${network.name} ${contractAddress}`);
-    console.log("   OR");
-    console.log(`   npm run verify:${network.name}`);
-
   } catch (error: any) {
     console.error("\n❌ Deployment failed:", error);
-    if (error.transaction) {
-      console.error("Transaction:", error.transaction);
-    }
-    if (error.receipt) {
-      console.error("Receipt:", error.receipt);
-    }
     throw error;
   }
 }

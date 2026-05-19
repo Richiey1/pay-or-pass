@@ -1,5 +1,5 @@
 {
-  "name": "blocxtactoe-contracts",
+  "name": "payorpass-contracts",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
@@ -20,14 +20,16 @@
     "loop:base:fast": "hardhat run --network base x-loop/counter-driver.ts --fast"
   },
   "keywords": [
-    "blocxtactoe",
-    "farcaster",
+    "payorpass",
+    "celo",
     "social",
+    "payment",
+    "game",
     "web3"
   ],
-  "author": "BlOcXTacToe Team",
+  "author": "PayOrPass Protocol Team",
   "license": "MIT",
-  "description": "Smart contracts for BlOcXTacToe - A decentralized Tic Tac Toe game with betting",
+  "description": "Smart contracts for PayOrPass - A decentralized social payment game on Celo",
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
     "@types/chai": "^4.3.20",

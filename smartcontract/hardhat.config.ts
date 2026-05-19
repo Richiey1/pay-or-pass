@@ -1,10 +1,13 @@
-require("dotenv").config();
+import { HardhatUserConfig } from "hardhat/config";
+import "@nomicfoundation/hardhat-toolbox";
+import * as dotenv from "dotenv";
 
-const providerApiKey = process.env.ALCHEMY_API_KEY || "oKxs-03sij-U_N0iOlrSsZFr29-IqbuF";
+dotenv.config();
+
 const deployerPrivateKey = process.env.ACCOUNT_PRIVATE_KEY || "0x0000000000000000000000000000000000000000000000000000000000000000";
 const etherscanApiKey = process.env.ETHERSCAN_V2_API_KEY || "DNXJA8RX2Q3VZ4URQIWP7Z68CJXQZSC6AW";
 
-module.exports = {
+const config: HardhatUserConfig = {
   solidity: {
     compilers: [{
       version: "0.8.20",
@@ -41,3 +44,5 @@ module.exports = {
     }],
   },
 };
+
+export default config;

@@ -11,4 +11,5 @@ export const PAY_OR_PASS_ABI = [
   "function supportedTokens(address) view returns (bool)",
   "function defaultTimeout() view returns (uint256)",
   "function defaultMultiplier() view returns (uint256)",
+  "function getPasses(uint256) view returns (tuple(uint256 chainId, address from, address to, uint256 amount, uint256 timestamp)[])",
 ];
