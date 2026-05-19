@@ -1,4 +1,5 @@
 import "./globals.css";
+import { Web3Providers } from "./providers";
 
 export const metadata = {
   title: "PayOrPass — Social Payment Game",
@@ -21,7 +22,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <Web3Providers>{children}</Web3Providers>
+      </body>
     </html>
   );
 }

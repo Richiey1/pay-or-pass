@@ -10,6 +10,9 @@ import {
   Menu, Info, Eye, EyeOff, CheckCircle2, AlertTriangle, HelpCircle,
   Copy, RefreshCw, LogIn, ChevronDown, Award, Compass, Sparkle
 } from "lucide-react";
+import { useAccount, useConnect, useBalance } from "wagmi";
+import { injected } from "wagmi/connectors";
+import { useAppKit } from "@reown/appkit/react";
 import { CONTRACT_ADDRESS as DEFAULT_CONTRACT_ADDRESS, PAY_OR_PASS_ABI } from "../lib/constants/contracts";
 
 export default function Home() {
@@ -21,16 +24,22 @@ export default function Home() {
   const [chainInfo, setChainInfo] = useState<any>(null);
   const [chainHistory, setChainHistory] = useState<any[]>([]);
 
-  // Wallet & Context State
-  const [address, setAddress] = useState("");
-  const [balance, setBalance] = useState("");
+  // Reown AppKit / Wagmi Wallet Connection
+  const { address, isConnected } = useAccount();
+  const { connect } = useConnect();
+  const { open } = useAppKit();
+  const { data: balanceData } = useBalance({
+    address: address,
+  });
+
   const [isMiniPay, setIsMiniPay] = useState(false);
-  const [isConnected, setIsConnected] = useState(false);
 
   // Real-time Countdown Timer
   const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
 
   const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || DEFAULT_CONTRACT_ADDRESS;
+
+  const balance = balanceData ? parseFloat(ethers.formatEther(balanceData.value)).toFixed(4) : "0.0000";
 
   async function getProvider() {
     if (typeof window !== "undefined" && (window as any).ethereum) {
@@ -41,38 +50,13 @@ export default function Home() {
 
   // Check & Auto-Connect for MiniPay Context
   useEffect(() => {
-    async function checkMiniPay() {
-      if (typeof window !== "undefined" && (window as any).ethereum) {
-        const eth = (window as any).ethereum;
-        const isMin = !!eth.isMiniPay;
-        setIsMiniPay(isMin);
-
-        if (isMin) {
-          try {
-            const provider = new ethers.BrowserProvider(eth);
-            const accounts = await eth.request({ method: "eth_accounts" });
-            if (accounts && accounts[0]) {
-              setAddress(accounts[0]);
-              setIsConnected(true);
-              const bal = await provider.getBalance(accounts[0]);
-              setBalance(ethers.formatEther(bal));
-            } else {
-              const reqAccounts = await eth.request({ method: "eth_requestAccounts" });
-              if (reqAccounts && reqAccounts[0]) {
-                setAddress(reqAccounts[0]);
-                setIsConnected(true);
-                const bal = await provider.getBalance(reqAccounts[0]);
-                setBalance(ethers.formatEther(bal));
-              }
-            }
-          } catch (err) {
-            console.error("MiniPay silent connection failed:", err);
-          }
-        }
+    if (typeof window !== "undefined" && (window as any).ethereum?.isMiniPay) {
+      setIsMiniPay(true);
+      if (!isConnected) {
+        connect({ connector: injected() });
       }
     }
-    checkMiniPay();
-  }, []);
+  }, [connect, isConnected]);
 
   // Countdown timer handler
   useEffect(() => {
@@ -84,35 +68,15 @@ export default function Home() {
   }, [secondsLeft]);
 
   async function connectWallet() {
-    if (typeof window !== "undefined" && (window as any).ethereum) {
-      try {
-        setLoading(true);
-        setStatus("Connecting wallet...");
-        const provider = new ethers.BrowserProvider((window as any).ethereum);
-        const accounts = await (window as any).ethereum.request({ method: "eth_requestAccounts" });
-        if (accounts && accounts[0]) {
-          setAddress(accounts[0]);
-          setIsConnected(true);
-          const bal = await provider.getBalance(accounts[0]);
-          setBalance(ethers.formatEther(bal));
-          setStatus("Wallet connected successfully!");
-        }
-      } catch (err: any) {
-        setStatus(`Connection failed: ${err.message}`);
-      } finally {
-        setLoading(false);
-      }
-    } else {
-      setStatus("No Web3 provider found. Please use Valora or Opera Mini.");
-    }
-  }
-
-  async function updateBalance(provider: any, userAddr: string) {
     try {
-      const bal = await provider.getBalance(userAddr);
-      setBalance(ethers.formatEther(bal));
-    } catch (err) {
-      console.error("Failed to update balance:", err);
+      setLoading(true);
+      setStatus("Opening connect portal...");
+      await open();
+      setStatus("Connect portal loaded.");
+    } catch (err: any) {
+      setStatus(`Connection failed: ${err.message}`);
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -126,6 +90,7 @@ export default function Home() {
       setLoading(true);
       if (!isConnected) {
         await connectWallet();
+        return;
       }
       setStatus("Initiating chain contract deployment...");
       const provider = await getProvider();
@@ -162,7 +127,6 @@ export default function Home() {
 
       setChainId(createdChainId);
       setStatus(`Success! Chain #${createdChainId} created.`);
-      await updateBalance(provider, address);
       loadChain(createdChainId);
     } catch (err: any) {
       setStatus(`Error: ${err.message}`);
@@ -239,6 +203,7 @@ export default function Home() {
       setLoading(true);
       if (!isConnected) {
         await connectWallet();
+        return;
       }
       setStatus("Staking pay contract balance...");
       const provider = await getProvider();
@@ -255,7 +220,6 @@ export default function Home() {
       await tx.wait();
 
       setStatus("Success! Paid. Chain completed and ended.");
-      await updateBalance(provider, address);
       loadChain();
     } catch (err: any) {
       setStatus(`Error: ${err.message}`);
@@ -274,6 +238,7 @@ export default function Home() {
       setLoading(true);
       if (!isConnected) {
         await connectWallet();
+        return;
       }
       setStatus("Initiating dynamic passing stake redirection...");
       const provider = await getProvider();
@@ -289,7 +254,6 @@ export default function Home() {
 
       setStatus(`Success! Passed to recipient.`);
       setRecipient("");
-      await updateBalance(provider, address);
       loadChain();
     } catch (err: any) {
       setStatus(`Error: ${err.message}`);
@@ -338,7 +302,7 @@ export default function Home() {
         </div>
 
         <div className="flex items-center gap-4 bg-[#111115]/90 border border-zinc-900 px-4 py-2 rounded-2xl shadow-sm backdrop-blur-md">
-          {isConnected ? (
+          {isConnected && address ? (
             <div className="flex items-center gap-4 text-xs">
               <button 
                 onClick={() => copyToClipboard(address)}
@@ -350,7 +314,7 @@ export default function Home() {
               <div className="h-4 w-[1px] bg-zinc-800" />
               <div className="flex items-center gap-1.5 font-extrabold text-white">
                 <DollarSign className="w-3.5 h-3.5 text-[#FBCC5C]" />
-                <span>{parseFloat(balance).toFixed(4)} CELO</span>
+                <span>{balance} CELO</span>
               </div>
             </div>
           ) : (
