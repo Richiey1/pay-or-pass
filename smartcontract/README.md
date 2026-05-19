@@ -5,9 +5,11 @@
 [![Solidity](https://img.shields.io/badge/Solidity-^0.8.20-363636?style=flat-square&logo=solidity)](https://soliditylang.org)
 [![Hardhat](https://img.shields.io/badge/Hardhat-primary-FFF100?style=flat-square)](https://hardhat.org)
 [![Network](https://img.shields.io/badge/Celo-Testnet-16D14E?style=flat-square&logo=celo)](https://celo.org)
-[![Tests](https://img.shields.io/badge/Tests-passing-success?style=flat-square)](https://github.com/Richiey1/pay-or-pass)
+[![Tests](https://img.shields.io/badge/Tests-9%20passing-success?style=flat-square)](https://github.com/Richiey1/pay-or-pass)
 
 Solidity smart contracts for the PayOrPass social payment game on Celo. Conditional escrow payments with time-based, manual, and oracle-triggered execution.
+
+</div>
 
 ---
 
@@ -40,9 +42,9 @@ graph TD
 
 Core social payment game contract. Implements a chain-based payment router where:
 
-- **Create Chain**: Start a payment chain with initial amount
-- **Pay**: Absorb the cost and end the chain  
-- **Pass**: Forward increased amount to another user (20% multiplier)
+- **Create Chain**: Start a payment chain with initial amount.
+- **Pay**: Absorb the cost and end the chain.  
+- **Pass**: Forward increased amount to another user (20% multiplier).
 
 **Key Functions:**
 
@@ -79,17 +81,17 @@ Passes to another user, increasing amount by multiplier.
 
 ## 🔐 Security Features
 
-- **ReentrancyGuard** on all state-changing functions
-- **Input validation** (zero address, amounts, timeouts)
-- **Safe transfer patterns** with revert handling
-- **Timeout enforcement** prevents indefinite stalling
+- **ReentrancyGuard** on all state-changing functions.
+- **Input validation** (zero address, amounts, timeouts).
+- **Safe transfer patterns** with revert handling.
+- **Timeout enforcement** prevents indefinite stalling.
 
 ---
 
 ## 🧪 Testing
 
 ```bash
-# Run all tests
+# Run all comprehensive unit tests
 npx hardhat test
 
 # Compile
@@ -103,14 +105,14 @@ npx hardhat compile
 ### Celo Alfajores (Testnet)
 
 ```bash
-npx hardhat run scripts/deploy.js --network celoAlfajores
+npx hardhat run scripts/deploy.ts --network celoAlfajores
 ```
 
 ### Local Development
 
 ```bash
 npx hardhat node
-npx hardhat run scripts/deploy.js --network localhost
+npx hardhat run scripts/deploy.ts --network localhost
 ```
 
 ---
@@ -121,7 +123,6 @@ npx hardhat run scripts/deploy.js --network localhost
 |-----------|---------|-------------|
 | Timeout | 1 hour | Auto-pay if no action |
 | Multiplier | 120% | Pass amount increase |
-| Min Amount | 0.001 ETH | Prevent dust spam |
 
 ---
 
@@ -130,7 +131,6 @@ npx hardhat run scripts/deploy.js --network localhost
 - [Solidity Docs](https://docs.soliditylang.org)
 - [Hardhat](https://hardhat.org)
 - [Celo Developer Docs](https://docs.celo.org)
-- [Ethereum ERC Standards](https://eips.ethereum.org)
 
 ---
 
