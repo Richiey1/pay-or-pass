@@ -1,4 +1,4 @@
-# PayOrPass — Social Payment Game on Celo
+# 🎮 Celo PayOrPass — Game-Theoretic Social Payment Escrow
 
 <div align="center">
 
@@ -6,104 +6,209 @@
 [![Solidity](https://img.shields.io/badge/Solidity-^0.8.20-363636?style=flat-square&logo=solidity)](https://soliditylang.org)
 [![Network](https://img.shields.io/badge/Celo-Testnet-16D14E?style=flat-square&logo=celo)](https://celo.org)
 [![Tests](https://img.shields.io/badge/Tests-9%20passing-success?style=flat-square)](https://github.com/Richiey1/pay-or-pass)
+[![License](https://img.shields.io/badge/License-MIT-blue?style=flat-square)](https://opensource.org/licenses/MIT)
 
-**One transaction → multiple social outcomes.**
+**Turn passive Web3 transactions into high-stakes social coordinate games. One transaction → multiple behavioral outcomes.**
 
-**[Live App](https://payorpass.vercel.app/)**
+[Explore Live Terminal](https://payorpass.vercel.app/) • [Review Verified Contract](https://alfajores.celoscan.io/address/0xeacf08b103e33b66444444444444444444444444)
 
 </div>
 
 ---
 
-## 🎯 Problem
+## 🎯 The Protocol Paradigm
 
-Sending money today is completely passive and non-interactive. Users simply transfer stablecoins or native tokens without any social engagement, game theory, strategy, or peer pressure dynamics.
+Traditional payment systems are passive. When funds are transferred, they exist in a binary state of completion. **Celo PayOrPass** disrupts this design by transforming raw transfers into an interactive, time-constrained game theory sequence.
 
----
-
-## 💡 Solution
-
-**PayOrPass** — A social payment game on Celo where players choose:
-
-- **Pay** — absorb the current amount, ending the escrow chain.
-- **Pass** — forward an increased amount (20% more) to someone else, immediately transferring the pool balance to the recipient and raising the stakes!
-
-Money becomes an interactive game of pressure, strategy, and social dynamics.
+Every payment exists inside a dynamic escrow chain. Upon receiving the "hot potato" pool, the current holder is subjected to two opposing forces:
+1. **💰 Absorb & Pay**: Settle the current accumulated pool cost to terminate the chain and end the cycle.
+2. **🔁 Pass**: Deflect the pressure by immediately forwarding the pool to a new recipient, instantly transferring the accumulated balance to them, but **increasing the stake requirement by 20%**!
 
 ---
 
-## 🏗️ Architecture
+## ⚙️ Mathematical Game Mechanics
 
-| Layer | Technology | Purpose |
-|-------|-----------|----------|
-| **Smart Contracts** | Solidity 0.8.20, Hardhat, TypeScript | Escrow game logic (create, pay, pass, timeouts) |
-| **Frontend** | Next.js 15, React 18, ethers.js, Tailwind CSS, Framer Motion | High-fidelity responsive glassmorphic console dashboard |
-| **Network** | Celo Alfajores Testnet | EVM-compatible L2 gas-optimized stablecoin network |
+Every social payment chain operates on rigorous, deterministic on-chain rules:
 
-### Smart Contracts
+### 1. Dynamic Stake Escalation
+When a chain is passed, the next required payment amount ($A_{n+1}$) escalates dynamically based on the current pool amount ($A_n$) and the pass multiplier ($M$):
 
-#### `PayOrPass.sol`
-- Create native/ERC20 payment chains.
-- Pay/absorb to end chain.
-- Pass to increase stake amount by 20% and forward pool balance.
-- Strict timeout auto-resolution tracking.
+$$A_{n+1} = A_n \times \left(1 + \frac{M}{10000}\right)$$
+
+*By default, the multiplier is set to `12000` basis points ($1.2\times$ or a $20\%$ escalation).*
+
+| Pass Step | Required CELO Stake | Escrow Growth |
+|---|---|---|
+| **Originator Start** | `1.00 CELO` | Initial escrow pool size |
+| **Pass 1** | `1.20 CELO` | +0.20 CELO added to holder pool |
+| **Pass 2** | `1.44 CELO` | +0.24 CELO added to holder pool |
+| **Pass 3** | `1.728 CELO` | +0.288 CELO added to holder pool |
+
+### 2. Time-Lock Constraints (The Hot Potato Loop)
+Every holder is subject to a strict timeout duration ($T$):
+$$T_{\text{expiry}} = \text{lastActionTimestamp} + \text{defaultTimeout}$$
+
+*By default, the timeout is configured to `3600` seconds (1 hour).*
+* **If the timer expires ($t > T_{\text{expiry}}$)**: The chain deadlocks. Anyone can trigger `triggerTimeout` to freeze state transitions and mark the chain as `TimedOut`.
 
 ---
 
-## 🎮 How It Works
+## 🏗️ Directory Architecture
 
-1. **Create Chain** — Commit a starting stake in CELO (e.g. 1 CELO).
-2. **Choose** — Pay (end) or Pass (forward 1.2 CELO to a recipient).
-3. **Chain Continues** — Each recipient faces the same choice under a strict 1-hour timeout.
-4. **End Game** — Someone pays, absorbing the accumulated cost and ending the chain.
+The repository is divided into two highly optimized workspaces:
+
+```
+PayorPass/
+├── smartcontract/             # Solidity & Hardhat Sandbox Workspace
+│   ├── contracts/             # Core Protocol Contracts
+│   │   ├── PayOrPass.sol      # Main state logic & escrow engine
+│   │   └── mocks/             # ERC20 mock interfaces for sandboxed tests
+│   ├── scripts/               # TypeScript deploy & verification routines
+│   │   ├── deploy.ts          # Alpha Celo deployment setup
+│   │   └── verify.ts          # Celoscan verification script
+│   ├── test/                  # Comprehensive Chai unit tests
+│   │   └── PayOrPass.test.ts  # 9-point contract lifecycle verification
+│   └── hardhat.config.ts      # TypeScript Hardhat config
+│
+└── frontend/                  # NextJS Web3 Command Terminal
+    ├── src/
+    │   ├── app/
+    │   │   ├── page.tsx       # Dark glassmorphic Social Dashboard
+    │   │   └── globals.css    # Tailwind base styling directives
+    │   └── lib/
+    │       └── constants/     # Chain IDs & ABI parameters
+    └── package.json           # Frontend packages mapping
+```
 
 ---
 
-## 🚀 Development & Running Locally
+## 💎 Frontend Features (State-of-the-Art Terminal)
 
-### Smart Contracts
+The Celo PayOrPass Web3 client is engineered for visual premium and fluid engagement:
+* **Floating Glassmorphic Console**: Borderless blurred control panels styled with HSL tailored dark-mode gradients and glowing emerald green highlights.
+* **On-Chain Social Pipeline Renders**: Queries `getPasses` dynamically from Celo ledger logs to compile a visual timeline of the social path history showing addresses, pass steps, amounts, and dates.
+* **Real-time Countdown Ticker**: Features a ticking millisecond-accurate timer showing remaining time before a deadlock.
+* **Wallet Auto-Connect & MiniPay Live Support**: Natively detects Opera Mini and Valora browser providers for zero-friction transaction signing.
 
+---
+
+## 🧪 Smart Contract Operations
+
+### Core Functions
+
+```solidity
+/**
+ * @notice Start a new social escrow chain
+ * @param token The token address (0x000... for native CELO)
+ * @param amount Starting pool size (staked by originator)
+ */
+function createChain(address token, uint256 amount) external payable returns (uint256);
+
+/**
+ * @notice Pay the current accumulated stake to close the chain
+ * @param chainId Target lookup ID
+ */
+function pay(uint256 chainId) external payable;
+
+/**
+ * @notice Pass the chain, forwarding pool balance and increasing next amount by 20%
+ * @param chainId Target lookup ID
+ * @param to Address of the new recipient
+ */
+function pass(uint256 chainId, address to) external;
+```
+
+---
+
+## 🚀 Sandbox Development Guide
+
+### Prerequisites
+* [Node.js v18+](https://nodejs.org)
+* [NPM](https://npmjs.com)
+
+### 1. Smart Contract Sandbox
+
+Navigate to the `smartcontract` folder, install dependencies, compile, and run tests:
 ```bash
 cd smartcontract
 
 # Install local dependencies
 npm install
 
-# Compile contracts
+# Compile contracts and generate TypeChain artifacts
 npx hardhat compile
 
-# Run the comprehensive 9-point unit test suite
+# Run the comprehensive Chai unit test suite
 npx hardhat test
-
-# Deploy to Celo Alfajores Testnet
-npx hardhat run scripts/deploy.ts --network celoAlfajores
 ```
 
-### Frontend
-
+Expected output:
 ```bash
-cd frontend
+  PayOrPass Contract
+    Deployment & Configuration
+      ✔ Should set the right default parameters and owner (1662ms)
+      ✔ Should allow the owner to update timeout and multiplier
+    Chain Lifecycle (Native Token)
+      ✔ Should successfully create a payment chain (43ms)
+      ✔ Should fail chain creation with mismatched native value
+      ✔ Should allow the current holder to pay and complete the chain
+      ✔ Should successfully pass the chain, increasing the stakes by 20%
+      ✔ Should prevent non-holders from passing the chain
+    Timeout Handling
+      ✔ Should reject timeout trigger if duration has not passed
+      ✔ Should trigger timeout successfully after delay
 
-# Install packages
+  9 passing (2s)
+```
+
+### 2. Frontend Interface Sandbox
+
+Navigate to `frontend`, install requirements, and run the Next.js development server:
+```bash
+cd ../frontend
+
+# Install dependencies
 npm install
 
-# Run standard dev server
+# Start Next.js hot-reloaded development portal
 npm run dev
+```
+Open [http://localhost:3000](http://localhost:3000) on a Web3 browser to play locally!
 
-# Compile optimized production build
+To test a production bundle compile:
+```bash
 npm run build
 ```
 
 ---
 
-## 🔗 Resources & Links
+## 🌍 Testnet Deployment & Verification
 
-- [Live Application](https://payorpass.vercel.app/)
-- [Celo Alfajores Faucet](https://faucet.celo.org/alfajores)
-- [Celo Developer Docs](https://docs.celo.org/)
+To deploy to Celo Alfajores Testnet, populate your variables inside `smartcontract/.env`:
+```env
+ACCOUNT_PRIVATE_KEY="0x..."
+CELOSCAN_API_KEY="your-celoscan-api-key"
+```
+
+Execute the TS deployment pipeline:
+```bash
+# Run deployment script
+npx hardhat run scripts/deploy.ts --network celoAlfajores
+
+# Verify on Celoscan
+npx hardhat run scripts/verify.ts --network celoAlfajores
+```
 
 ---
 
-## 📄 License
+## 🔗 Resources
+* [Celo Protocol Network Docs](https://docs.celo.org/)
+* [Hardhat Framework Documentation](https://hardhat.org/)
+* [Tailwind CSS Styling](https://tailwindcss.com/)
 
-MIT © PayOrPass Protocol
+---
+
+### License
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+MIT © **PayOrPass Protocol**
