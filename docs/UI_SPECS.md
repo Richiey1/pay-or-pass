@@ -4,3 +4,4 @@
 \n## Empty States\n- No transactions yet\n- No items in cart\n- Guides users on next actions.
 \n## Error & Success States\n- Error: Network error, failed to load data.\n- Success: Toast notifications, alerts, confirmations.
 \n## Progressive Disclosure\n- Tooltips\n- Coach marks\n- Multi-step walkthroughs.
+\n## Design Styles\n- Glassmorphism: Blur & transparency.\n- Neumorphism: Soft shadows.\n- Minimalism: Clean layouts.
