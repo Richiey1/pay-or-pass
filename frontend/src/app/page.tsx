@@ -339,7 +339,7 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-[#070709] text-zinc-100 font-sans selection:bg-[#FBCC5C] selection:text-black overflow-x-hidden flex flex-col justify-between relative">
+    <div className="min-h-screen bg-[#070709] text-zinc-100 font-sans selection:bg-red-600 selection:text-white overflow-x-hidden flex flex-col justify-between relative">
       {/* Celo Gold Neo Grid Backdrop */}
       <div className="fixed inset-0 bg-[linear-gradient(to_right,#fbcc5c03_1px,transparent_1px),linear-gradient(to_bottom,#fbcc5c03_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none z-0" />
       <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[700px] h-[500px] bg-[#fbcc5c]/5 rounded-full filter blur-[140px] pointer-events-none z-0" />
