@@ -67,7 +67,8 @@ export default function Home() {
   });
 
   const [isMiniPay, setIsMiniPay] = useState(false);
-
+  const [copied, setCopied] = useState(false);
+ 
   // Real-time Countdown Timer
   const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
 
@@ -328,7 +329,9 @@ export default function Home() {
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    setStatus("Copied to clipboard!");
+    setCopied(true);
+    showToast("Address copied to clipboard!", "success");
+    setTimeout(() => setCopied(false), 2000);
   };
 
   const formatTime = (secs: number) => {
@@ -353,7 +356,7 @@ export default function Home() {
             alt="PayOrPass Logo"
             className="w-10 h-10 object-contain hover:scale-105 transition-transform duration-300"
           />
-          <div>
+          <div className="hidden sm:block">
             <span className="text-lg font-black uppercase tracking-widest bg-gradient-to-r from-[#FBCC5C] via-[#F0A91D] to-[#E2A229] bg-clip-text text-transparent italic">
               PayOrPass.
             </span>
@@ -362,7 +365,7 @@ export default function Home() {
             </p>
           </div>
         </div>
-
+ 
         <div className="flex items-center gap-4 bg-[#111115]/90 border border-zinc-900 px-4 py-2 rounded-2xl shadow-sm backdrop-blur-md">
           {isConnected && address ? (
             <div className="flex items-center gap-4 text-xs">
@@ -374,7 +377,11 @@ export default function Home() {
                   {address.substring(0, 6)}...
                   {address.substring(address.length - 4)}
                 </span>
-                <Copy className="w-3 h-3" />
+                {copied ? (
+                  <CheckCircle2 className="w-3 h-3 text-[#FBCC5C]" />
+                ) : (
+                  <Copy className="w-3 h-3" />
+                )}
               </button>
               <div className="h-4 w-[1px] bg-zinc-800" />
               <div className="flex items-center gap-1.5 font-extrabold text-white">
@@ -383,16 +390,18 @@ export default function Home() {
               </div>
             </div>
           ) : (
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={connectWallet}
-              className="bg-[#FBCC5C]/10 hover:bg-[#FBCC5C]/20 text-[#FBCC5C] border border-[#FBCC5C]/20 font-bold py-1.5 px-4 rounded-xl text-xs flex items-center gap-2 transition-all"
-            >
-              <LogIn className="w-3.5 h-3.5" /> Connect Wallet
-            </motion.button>
+            !isMiniPay && (
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={connectWallet}
+                className="bg-[#FBCC5C]/10 hover:bg-[#FBCC5C]/20 text-[#FBCC5C] border border-[#FBCC5C]/20 font-bold py-1.5 px-4 rounded-xl text-xs flex items-center gap-2 transition-all"
+              >
+                <LogIn className="w-3.5 h-3.5" /> Connect Wallet
+              </motion.button>
+            )
           )}
-
+ 
           {isMiniPay && (
             <span className="hidden sm:inline-flex items-center gap-1 bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2.5 py-1 rounded-xl text-[9px] font-black uppercase tracking-wider">
               ⚡ MiniPay Live

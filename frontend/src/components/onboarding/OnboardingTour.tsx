@@ -7,19 +7,22 @@ import { X, Flame, Users, Timer, ChevronRight } from "lucide-react";
 const slides = [
   {
     title: "Pay or Pass?",
-    description: "A social game of pressure. You receive a request: pay the small amount or pass a higher amount to someone else.",
+    description:
+      "A social game of pressure. You receive a request: pay the small amount or pass a higher amount to someone else.",
     icon: <Flame className="w-12 h-12 text-red-500" />,
     color: "from-red-600/20 to-transparent",
   },
   {
     title: "The Multiplier",
-    description: "Every time someone passes, the cost increases by 20%. Don't be the one caught when the timer hits zero!",
+    description:
+      "Every time someone passes, the cost increases by 20%. Don&apos;t be the one caught when the timer hits zero!",
     icon: <Users className="w-12 h-12 text-purple-500" />,
     color: "from-purple-600/20 to-transparent",
   },
   {
     title: "Survival is Key",
-    description: "Strategic passing is everything. Choose your targets wisely and keep the chain moving.",
+    description:
+      "Strategic passing is everything. Choose your targets wisely and keep the chain moving.",
     icon: <Timer className="w-12 h-12 text-amber-500" />,
     color: "from-amber-600/20 to-transparent",
   },
@@ -59,8 +62,10 @@ export default function OnboardingTour() {
         className="relative w-full max-w-sm overflow-hidden bg-zinc-900 border-2 border-zinc-800 rounded-3xl shadow-[0_0_50px_rgba(239,68,68,0.15)]"
       >
         {/* Animated Background */}
-        <div className={`absolute inset-0 bg-gradient-to-tr ${slides[currentSlide].color} transition-colors duration-700`} />
-        
+        <div
+          className={`absolute inset-0 bg-gradient-to-tr ${slides[currentSlide].color} transition-colors duration-700`}
+        />
+
         <div className="relative p-10 flex flex-col items-center text-center">
           <button
             onClick={handleClose}
@@ -95,7 +100,9 @@ export default function OnboardingTour() {
                 <div
                   key={index}
                   className={`h-1 rounded-full transition-all duration-500 ${
-                    index === currentSlide ? "w-12 bg-red-500" : "w-4 bg-zinc-800"
+                    index === currentSlide
+                      ? "w-12 bg-red-500"
+                      : "w-4 bg-zinc-800"
                   }`}
                 />
               ))}
@@ -105,8 +112,13 @@ export default function OnboardingTour() {
               onClick={nextSlide}
               className="w-full py-5 bg-red-600 hover:bg-red-500 text-white font-black uppercase tracking-widest rounded-2xl transition-all active:scale-[0.98] shadow-lg shadow-red-900/20 flex items-center justify-center gap-3 group"
             >
-              {currentSlide === slides.length - 1 ? "I'm Ready" : "Continue"}
-              <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
+              {currentSlide === slides.length - 1
+                ? "I&apos;m Ready"
+                : "Continue"}
+              <ChevronRight
+                size={20}
+                className="group-hover:translate-x-1 transition-transform"
+              />
             </button>
           </div>
         </div>
