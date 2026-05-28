@@ -68,6 +68,7 @@ export default function Home() {
 
   const [isMiniPay, setIsMiniPay] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [rulesExpanded, setRulesExpanded] = useState(false);
  
   // Real-time Countdown Timer
   const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
@@ -368,7 +369,7 @@ export default function Home() {
  
         <div className="flex items-center gap-4 bg-[#111115]/90 border border-zinc-900 px-4 py-2 rounded-2xl shadow-sm backdrop-blur-md">
           {isConnected && address ? (
-            <div className="flex items-center gap-4 text-xs">
+            <div className="flex items-center gap-2 text-xs">
               <button
                 onClick={() => copyToClipboard(address)}
                 className="flex items-center gap-1.5 hover:text-[#FBCC5C] transition-colors text-zinc-400 font-mono bg-zinc-950/60 px-3 py-1 rounded-xl border border-zinc-900"
@@ -383,11 +384,6 @@ export default function Home() {
                   <Copy className="w-3 h-3" />
                 )}
               </button>
-              <div className="h-4 w-[1px] bg-zinc-800" />
-              <div className="flex items-center gap-1.5 font-extrabold text-white">
-                <DollarSign className="w-3.5 h-3.5 text-[#FBCC5C]" />
-                <span>{balance} CELO</span>
-              </div>
             </div>
           ) : (
             !isMiniPay && (
@@ -440,18 +436,23 @@ export default function Home() {
                 <div className="absolute top-0 right-0 w-24 h-24 bg-[#FBCC5C]/3 rounded-full filter blur-xl opacity-60 group-hover:opacity-100 transition-opacity" />
 
                 <div className="space-y-4">
-                  <div className="flex justify-between items-center">
+                  <div className="flex justify-between items-center gap-2 flex-wrap sm:flex-nowrap">
                     <h3 className="text-xs font-black uppercase tracking-widest text-[#FBCC5C] flex items-center gap-2">
                       <Play className="w-3.5 h-3.5 fill-[#FBCC5C] text-[#FBCC5C]" />{" "}
                       Deploy Chain
                     </h3>
                     {isConnected && (
-                      <button
-                        onClick={handleMax}
-                        className="text-[9px] font-black text-[#FBCC5C] hover:text-amber-300 transition-colors uppercase tracking-widest px-2.5 py-1 bg-[#FBCC5C]/10 hover:bg-[#FBCC5C]/20 rounded-lg border border-[#FBCC5C]/10"
-                      >
-                        MAX
-                      </button>
+                      <div className="flex items-center gap-2.5">
+                        <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest">
+                          Balance: <span className="text-[#FBCC5C]">{balance} CELO</span>
+                        </span>
+                        <button
+                          onClick={handleMax}
+                          className="text-[9px] font-black text-[#FBCC5C] hover:text-amber-300 transition-colors uppercase tracking-widest px-2.5 py-1 bg-[#FBCC5C]/10 hover:bg-[#FBCC5C]/20 rounded-lg border border-[#FBCC5C]/10"
+                        >
+                          MAX
+                        </button>
+                      </div>
                     )}
                   </div>
 
@@ -764,57 +765,75 @@ export default function Home() {
             </motion.div>
           </div>
         </div>
-
-        {/* BOTTOM HORIZONTAL GRID: BRAND GAME ARCHITECTURE */}
+              {/* BOTTOM HORIZONTAL GRID: BRAND GAME ARCHITECTURE */}
         <div className="mt-6 pt-8 border-t border-zinc-900/60">
-          <div className="flex items-center gap-2 mb-6">
-            <Info className="w-4 h-4 text-[#FBCC5C]" />
-            <h3 className="text-xs font-black uppercase tracking-widest text-zinc-400">
-              Rules of Engagement
-            </h3>
+          <div 
+            onClick={() => setRulesExpanded(!rulesExpanded)}
+            className="flex justify-between items-center mb-6 cursor-pointer select-none group"
+          >
+            <div className="flex items-center gap-2">
+              <Info className="w-4 h-4 text-[#FBCC5C]" />
+              <h3 className="text-xs font-black uppercase tracking-widest text-zinc-400 group-hover:text-white transition-colors">
+                Rules of Engagement
+              </h3>
+            </div>
+            <ChevronDown 
+              className={`w-4 h-4 text-zinc-500 group-hover:text-white transition-transform duration-300 ${rulesExpanded ? "rotate-180" : ""}`}
+            />
           </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[
-              {
-                step: "01",
-                title: "Deploy Dynamic Pool",
-                desc: "Launch a social routing chain by locking your starting CELO deposit into the protocol ledger.",
-              },
-              {
-                step: "02",
-                title: "Pass Escalation",
-                desc: "Pass the transaction onward. The stake instantly redirects to the target recipient, while the next required pass cost escalates by 20%.",
-              },
-              {
-                step: "03",
-                title: "Timeout Deadlock",
-                desc: "A strict 1-hour countdown applies. If the current holder triggers a timeout deadlock, the pool absorbs and finalizes.",
-              },
-              {
-                step: "04",
-                title: "Absorb & End",
-                desc: "Absorb the total accrued CELO. Pay the required claim stake to permanently close the cycle and receive the total pool.",
-              },
-            ].map((step, idx) => (
-              <div
-                key={idx}
-                className="bg-[#0e0e13]/30 border border-zinc-900/80 rounded-2xl p-5 space-y-3 relative overflow-hidden group"
+ 
+          <AnimatePresence>
+            {rulesExpanded && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="overflow-hidden"
               >
-                <div className="text-xl font-mono font-black text-[#FBCC5C]/20 group-hover:text-[#FBCC5C]/40 transition-colors">
-                  {step.step}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 pt-2">
+                  {[
+                    {
+                      step: "01",
+                      title: "Deploy Dynamic Pool",
+                      desc: "Launch a social routing chain by locking your starting CELO deposit into the protocol ledger.",
+                    },
+                    {
+                      step: "02",
+                      title: "Pass Escalation",
+                      desc: "Pass the transaction onward. The stake instantly redirects to the target recipient, while the next required pass cost escalates by 20%.",
+                    },
+                    {
+                      step: "03",
+                      title: "Timeout Deadlock",
+                      desc: "A strict 1-hour countdown applies. If the current holder triggers a timeout deadlock, the pool absorbs and finalizes.",
+                    },
+                    {
+                      step: "04",
+                      title: "Absorb & End",
+                      desc: "Absorb the total accrued CELO. Pay the required claim stake to permanently close the cycle and receive the total pool.",
+                    },
+                  ].map((step, idx) => (
+                    <div
+                      key={idx}
+                      className="bg-[#0e0e13]/30 border border-zinc-900/80 rounded-2xl p-5 space-y-3 relative overflow-hidden group"
+                    >
+                      <div className="text-xl font-mono font-black text-[#FBCC5C]/20 group-hover:text-[#FBCC5C]/40 transition-colors">
+                        {step.step}
+                      </div>
+                      <div className="space-y-1">
+                        <h4 className="text-xs font-black uppercase tracking-wider text-white italic">
+                          {step.title}
+                        </h4>
+                        <p className="text-[9.5px] text-zinc-500 leading-relaxed font-medium">
+                          {step.desc}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                <div className="space-y-1">
-                  <h4 className="text-xs font-black uppercase tracking-wider text-white italic">
-                    {step.title}
-                  </h4>
-                  <p className="text-[9.5px] text-zinc-500 leading-relaxed font-medium">
-                    {step.desc}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
 
