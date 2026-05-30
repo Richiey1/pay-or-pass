@@ -73,6 +73,11 @@ export default function Home() {
   // Real-time Countdown Timer
   const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
 
+  // DeFi & Reputation State
+  const [reputation, setReputation] = useState<number | null>(null);
+  const [dividends, setDividends] = useState<string | null>(null);
+  const [realtimeAmount, setRealtimeAmount] = useState<string | null>(null);
+
   const CONTRACT_ADDRESS =
     process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || DEFAULT_CONTRACT_ADDRESS;
 
@@ -87,6 +92,31 @@ export default function Home() {
     return new ethers.JsonRpcProvider("https://forno.celo.org");
   }
 
+  // Fetch User Reputation and Dividends
+  async function fetchUserProfile() {
+    if (!address || !isConnected) return;
+    try {
+      const provider = await getProvider();
+      const contract = new ethers.Contract(CONTRACT_ADDRESS, PAY_OR_PASS_ABI, provider);
+      
+      try {
+        const rep = await contract.getReputation(address);
+        setReputation(Number(rep));
+      } catch (err) {
+        console.warn("Failed to fetch reputation:", err);
+      }
+
+      try {
+        const div = await contract.claimableDividends(address, ethers.ZeroAddress);
+        setDividends(ethers.formatEther(div));
+      } catch (err) {
+        console.warn("Failed to fetch dividends:", err);
+      }
+    } catch (e) {
+      console.error("Failed to load user profile stats:", e);
+    }
+  }
+
   // Check & Auto-Connect for MiniPay Context
   useEffect(() => {
     if (typeof window !== "undefined" && (window as any).ethereum?.isMiniPay) {
@@ -96,6 +126,44 @@ export default function Home() {
       }
     }
   }, [connect, isConnected]);
+
+  // Sync profile when address changes
+  useEffect(() => {
+    if (isConnected && address) {
+      fetchUserProfile();
+    } else {
+      setReputation(null);
+      setDividends(null);
+    }
+  }, [address, isConnected]);
+
+  // Real-time Compounding Yield Tracker
+  useEffect(() => {
+    if (!chainInfo || chainInfo.status !== "Active" || !chainInfo.amount) {
+      setRealtimeAmount(null);
+      return;
+    }
+    
+    const baseAmount = parseFloat(chainInfo.amount);
+    const lastAction = Number(chainInfo.lastActionAt);
+    const apy = 0.05; // 5% APY
+    const secondsInYear = 31536000;
+
+    const updateYield = () => {
+      const elapsed = Math.floor(Date.now() / 1000) - lastAction;
+      if (elapsed < 60) {
+        setRealtimeAmount(baseAmount.toFixed(8));
+        return;
+      }
+      const yieldValue = (elapsed * baseAmount * apy) / secondsInYear;
+      const currentTotal = baseAmount + yieldValue;
+      setRealtimeAmount(currentTotal.toFixed(8));
+    };
+
+    updateYield();
+    const interval = setInterval(updateYield, 1000);
+    return () => clearInterval(interval);
+  }, [chainInfo]);
 
   // Countdown timer handler
   useEffect(() => {
@@ -276,6 +344,7 @@ export default function Home() {
 
       setStatus("Success! Paid. Chain completed and ended.");
       loadChain();
+      fetchUserProfile();
     } catch (err: any) {
       setStatus(`Error: ${err.message}`);
     } finally {
@@ -314,6 +383,35 @@ export default function Home() {
       setStatus(`Success! Passed to recipient.`);
       setRecipient("");
       loadChain();
+      fetchUserProfile();
+    } catch (err: any) {
+      setStatus(`Error: ${err.message}`);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleClaimDividends() {
+    try {
+      setLoading(true);
+      setStatus("Claiming accumulated high-velocity dividends...");
+      const provider = await getProvider();
+      const signer = await provider.getSigner();
+      const contract = new ethers.Contract(
+        CONTRACT_ADDRESS,
+        PAY_OR_PASS_ABI,
+        signer,
+      );
+
+      const tx = await contract.claimDividends(ethers.ZeroAddress, {
+        type: 0, // Legacy type is mandatory for MiniPay environments
+      });
+
+      setStatus("Broadcasting claim transaction to Celo network...");
+      await tx.wait();
+      showToast("Dividends successfully claimed!", "success");
+      setStatus("Claim completed successfully!");
+      fetchUserProfile();
     } catch (err: any) {
       setStatus(`Error: ${err.message}`);
     } finally {
@@ -538,6 +636,82 @@ export default function Home() {
               </div>
             </div>
 
+            {/* DEFI SUITE: REPUTATION & DIVIDENDS CLAIM CENTER */}
+            {isConnected && (
+              <div className="bg-[#0e0e13]/60 border border-zinc-900 rounded-[28px] p-6 grid grid-cols-1 md:grid-cols-2 gap-6 backdrop-blur-2xl shadow-md relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/2 rounded-full filter blur-xl opacity-60 group-hover:opacity-100 transition-opacity" />
+                
+                {/* 1. Credit Profile Card */}
+                <div className="space-y-4">
+                  <h3 className="text-xs font-black uppercase tracking-widest text-[#FBCC5C] flex items-center gap-2">
+                    <ShieldCheck className="w-3.5 h-3.5 text-[#FBCC5C]" /> Credit Reputation
+                  </h3>
+                  <p className="text-[9.5px] text-zinc-500 font-medium">
+                    Farm credit reputation by creating chains and passing timely.
+                  </p>
+                  
+                  <div className="bg-zinc-950/40 p-4 rounded-2xl border border-zinc-900/60 relative">
+                    <div className="flex justify-between items-center">
+                      <span className="text-zinc-500 uppercase tracking-widest text-[7.5px] font-black">Reputation Score</span>
+                      <span className="text-xs font-black text-white italic">{reputation !== null ? reputation : 100} / 200</span>
+                    </div>
+                    {/* Score Bar */}
+                    <div className="w-full bg-zinc-900 rounded-full h-2 mt-2 overflow-hidden border border-zinc-800">
+                      <div 
+                        className="bg-gradient-to-r from-[#FBCC5C] to-[#E2A229] h-full rounded-full transition-all duration-500" 
+                        style={{ width: `${Math.min(100, ((reputation || 100) / 200) * 100)}%` }}
+                      />
+                    </div>
+                    <div className="flex justify-between items-center mt-2.5">
+                      <span className="text-[7px] text-zinc-500 font-black uppercase">Active Status</span>
+                      <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-wider ${
+                        (reputation || 100) >= 100 
+                          ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" 
+                          : (reputation || 100) < 50 
+                            ? "bg-red-500/10 text-red-400 border border-red-500/20 animate-pulse" 
+                            : "bg-amber-500/10 text-amber-400 border border-[#FBCC5C]/20"
+                      }`}>
+                        {(reputation || 100) >= 100 ? "Elite Player" : (reputation || 100) < 50 ? "Low Score Warning" : "Verified Player"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 2. Dividends Claim Panel */}
+                <div className="space-y-4 flex flex-col justify-between">
+                  <div className="space-y-2">
+                    <h3 className="text-xs font-black uppercase tracking-widest text-[#FBCC5C] flex items-center gap-2">
+                      <Trophy className="w-3.5 h-3.5 text-[#FBCC5C]" /> High-Velocity Dividends
+                    </h3>
+                    <p className="text-[9.5px] text-zinc-500 font-medium">
+                      Earn yield shares and forfeited wager dividends from passed chains.
+                    </p>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <div className="bg-zinc-950/40 p-3 rounded-2xl border border-zinc-900/60 flex justify-between items-center">
+                      <span className="text-zinc-500 uppercase tracking-widest text-[7.5px] font-black">Accrued Yields</span>
+                      <span className="text-sm font-black text-white font-mono">{dividends ? parseFloat(dividends).toFixed(6) : "0.000000"} CELO</span>
+                    </div>
+                    
+                    <motion.button
+                      whileHover={{ scale: 1.01 }}
+                      whileTap={{ scale: 0.99 }}
+                      onClick={handleClaimDividends}
+                      disabled={loading || !dividends || parseFloat(dividends) <= 0}
+                      className={`w-full py-3 rounded-xl font-black uppercase tracking-wider text-[9px] flex items-center justify-center gap-2 ${
+                        !dividends || parseFloat(dividends) <= 0 
+                          ? "bg-zinc-900 border border-zinc-800 text-zinc-650 cursor-not-allowed"
+                          : "bg-[#FBCC5C] hover:bg-amber-400 text-black shadow-lg shadow-amber-500/5 transition-colors"
+                      }`}
+                    >
+                      Claim Dividends
+                    </motion.button>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Dynamic Status Dashboard Alerts */}
             <AnimatePresence mode="wait">
               {status && (
@@ -597,8 +771,8 @@ export default function Home() {
                         <span className="text-zinc-500 block uppercase tracking-widest text-[7.5px] font-black">
                           Accrued Pool
                         </span>
-                        <span className="text-base font-black text-white mt-1 block italic">
-                          {chainInfo.amount} CELO
+                        <span className="text-base font-black text-white mt-1 block italic font-mono">
+                          {realtimeAmount || chainInfo.amount} CELO
                         </span>
                       </div>
                       <div className="bg-zinc-950/40 p-3 rounded-2xl border border-zinc-900/60">
