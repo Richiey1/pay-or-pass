@@ -143,7 +143,7 @@ const config: HardhatUserConfig = {
         network: "celo",
         chainId: 42220,
         urls: {
-          apiURL: "https://api.celoscan.io/api",
+          apiURL: "https://api.etherscan.io/v2/api",
           browserURL: "https://celoscan.io"
         }
       }

@@ -1,12 +1,12 @@
 {
   "contractName": "PayOrPass",
-  "address": "0xFbE03Cb7F2B41A741b496713727d85E4f9B98B07",
+  "address": "0x954613CfCd0AA7281C6E59C960205218185a5543",
   "deployer": "0xC1e4453d98fEe92504A2dC2114e6613053880A30",
   "network": "celo",
   "chainId": "42220",
-  "transactionHash": "0x4b160be4a3d207ae723400d96ffd9aa5fc0d4d55b22fb666d41faeeeae9efe72",
-  "timestamp": "2026-05-19T19:02:29.278Z",
-  "blockNumber": 67316588,
+  "transactionHash": "0x12d670f7fef9ccdd38a00bdece169dafd98d1ead7434f5bd93fc4ec5caa57f5e",
+  "timestamp": "2026-05-30T07:16:31.089Z",
+  "blockNumber": 68224631,
   "constructorArgs": [
     3600,
     12000
