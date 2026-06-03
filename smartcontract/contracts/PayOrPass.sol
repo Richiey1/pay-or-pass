@@ -56,7 +56,9 @@ contract PayOrPass is Ownable, ReentrancyGuard {
 
     // Yield Compounding Configuration
     uint256 public constant SECONDS_IN_YEAR = 31536000;
-    uint256 public constant APY_BASIS_POINTS = 500; // 5% APY
+    uint256 public apyBasisPoints = 500;       // 5% APY — governable
+    uint256 public blacklistThreshold = 20;    // Min reputation before auto-blacklist — governable
+    uint256 public defaultReputation = 100;    // Starting reputation for new players — governable
 
     // Dividends Ledger
     // claimableDividends[player][token] => Earned dividends
@@ -135,7 +137,7 @@ contract PayOrPass is Ownable, ReentrancyGuard {
         if (elapsed < 60) {
             return chain.amount;
         }
-        uint256 yield = (elapsed * chain.amount * APY_BASIS_POINTS) / (SECONDS_IN_YEAR * 10000);
+        uint256 yield = (elapsed * chain.amount * apyBasisPoints) / (SECONDS_IN_YEAR * 10000);
         return chain.amount + yield;
     }
 
@@ -153,7 +155,7 @@ contract PayOrPass is Ownable, ReentrancyGuard {
      */
     function getReputation(address player) public view returns (uint256) {
         uint256 score = playerReputation[player];
-        return score == 0 ? 100 : score;
+        return score == 0 ? defaultReputation : score;
     }
 
     // ---------------------------------------------
@@ -396,8 +398,8 @@ contract PayOrPass is Ownable, ReentrancyGuard {
 
         playerReputation[player] = newScore;
 
-        // Auto-blacklist if reputation drops below 20
-        if (newScore < 20) {
+        // Auto-blacklist if reputation drops below configurable threshold
+        if (newScore < blacklistThreshold) {
             blacklisted[player] = true;
         }
 
@@ -418,6 +420,21 @@ contract PayOrPass is Ownable, ReentrancyGuard {
 
     function addToken(address _token) external onlyOwner {
         supportedTokens[_token] = true;
+    }
+
+    /// @notice Governance: update the virtual APY used in yield compounding
+    function setApyBasisPoints(uint256 _apyBasisPoints) external onlyOwner {
+        apyBasisPoints = _apyBasisPoints;
+    }
+
+    /// @notice Governance: update the reputation floor below which players are auto-blacklisted
+    function setBlacklistThreshold(uint256 _threshold) external onlyOwner {
+        blacklistThreshold = _threshold;
+    }
+
+    /// @notice Governance: update the default starting reputation for new players
+    function setDefaultReputation(uint256 _defaultReputation) external onlyOwner {
+        defaultReputation = _defaultReputation;
     }
 
     // ---------------------------------------------
