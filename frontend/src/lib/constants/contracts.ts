@@ -1,5 +1,5 @@
 // Standardized Contract Constants for LosslessArena on Celo
-export const CONTRACT_ADDRESS = '0xE4B4699f7d33eb435D3dDEcE3906206B1BffBAab'; // Newly deployed Celo Mainnet contract address
+export const CONTRACT_ADDRESS = '0x9b932E9B16202760F4e3173B9Dbe060924857329'; // Newly deployed Celo Mainnet contract address
 
 export const LOSSLESS_ARENA_ABI = [
   "function enterArena() external payable",
