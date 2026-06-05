@@ -35,7 +35,7 @@ import {
   Compass,
   Sparkle,
 } from "lucide-react";
-import { useAccount, useConnect, useBalance } from "wagmi";
+import { useAccount, useConnect, useBalance, useReadContract } from "wagmi";
 import { injected } from "wagmi/connectors";
 import { useAppKit } from "@reown/appkit/react";
 import {
@@ -47,6 +47,7 @@ import {
   HistorySkeleton,
 } from "@/components/ui/SkeletonLoaders";
 import { useGameToast } from "@/components/ui/Toast";
+import AdminPanel from "@/components/AdminPanel";
 
 export default function Home() {
   const [chainId, setChainId] = useState("");
@@ -69,6 +70,13 @@ export default function Home() {
   const [isMiniPay, setIsMiniPay] = useState(false);
   const [copied, setCopied] = useState(false);
   const [rulesExpanded, setRulesExpanded] = useState(false);
+
+  const { data: ownerAddress } = useReadContract({
+    address: DEFAULT_CONTRACT_ADDRESS as `0x${string}`,
+    abi: PAY_OR_PASS_ABI,
+    functionName: "owner",
+  });
+  const isAdmin = address && ownerAddress && address.toLowerCase() === (ownerAddress as string).toLowerCase();
  
   // Real-time Countdown Timer
   const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
@@ -523,6 +531,8 @@ export default function Home() {
             absorbing the pool or pass it onward with a 20% staking escalation.
           </p>
         </div>
+
+        {isAdmin && <AdminPanel />}
 
         {/* TWO-COLUMN GRID ASSEMBLY */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
