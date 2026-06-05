@@ -1,43 +1,28 @@
-# 🎮 Celo PayOrPass — Game-Theoretic Social Payment Escrow
+# 🎮 PayOrPass (Lossless Arena)
 
-**A game-theoretic social payment escrow protocol on Celo.**
+**An Elite Retail Onboarding play. A GameFi app designed to abstract away DeFi yield generation behind a fun, risk-free arcade game to drive massive Daily Active Users (DAUs).**
+
+---
+
+## 🌐 Deployed Contracts (Celo Mainnet)
+
+* **LosslessArena:** [`0x9b932E9B16202760F4e3173B9Dbe060924857329`](https://celoscan.io/address/0x9b932E9B16202760F4e3173B9Dbe060924857329)
 
 ---
 
 ## 🎯 The Protocol Paradigm
 
-Traditional payment systems are passive. When funds are transferred, they exist in a binary state of completion. **Celo PayOrPass** disrupts this design by transforming raw transfers into an interactive, time-constrained game theory sequence.
+Traditional DeFi yield products are boring and complex. **Lossless Arena** disrupts this design by transforming passive yield generation into an interactive, risk-free game.
 
-Every payment exists inside a dynamic escrow chain. Upon receiving the "hot potato" pool, the current holder is subjected to two opposing forces:
-1. **💰 Absorb & Pay**: Settle the current accumulated pool cost to terminate the chain and end the cycle.
-2. **🔁 Pass**: Deflect the pressure by immediately forwarding the pool to a new recipient, instantly transferring the accumulated balance to them, but **increasing the stake requirement by 20%**!
+Every player stakes exactly 10 CELO into the principal-protected vault. The massive combined TVL of all active gladiators accrues yield (e.g. 8% APY). This accumulated yield is the real prize pool that players fight for.
+
+When a player initiates combat:
+1. **🏆 The Winner**: Absorbs the ENTIRE accrued "Global Prize Pool" yield that has accumulated since the last fight.
+2. **🛡️ The Loser**: Simply records a loss on their ledger, but their 10 CELO principal remains 100% intact.
+
+You can withdraw your 10 CELO principal and exit the arena at any time.
 
 ---
-
-## ⚙️ Mathematical Game Mechanics
-
-Every social payment chain operates on rigorous, deterministic on-chain rules:
-
-### 1. Dynamic Stake Escalation
-When a chain is passed, the next required payment amount ($A_{n+1}$) escalates dynamically based on the current pool amount ($A_n$) and the pass multiplier ($M$):
-
-$$A_{n+1} = A_n \times \left(1 + \frac{M}{10000}\right)$$
-
-*By default, the multiplier is set to `12000` basis points ($1.2\times$ or a $20\%$ escalation).*
-
-| Pass Step | Required CELO Stake | Escrow Growth |
-|---|---|---|
-| **Originator Start** | `1.00 CELO` | Initial escrow pool size |
-| **Pass 1** | `1.20 CELO` | +0.20 CELO added to holder pool |
-| **Pass 2** | `1.44 CELO` | +0.24 CELO added to holder pool |
-| **Pass 3** | `1.728 CELO` | +0.288 CELO added to holder pool |
-
-### 2. Time-Lock Constraints (The Hot Potato Loop)
-Every holder is subject to a strict timeout duration ($T$):
-$$T_{\text{expiry}} = \text{lastActionTimestamp} + \text{defaultTimeout}$$
-
-*By default, the timeout is configured to `3600` seconds (1 hour).*
-* **If the timer expires ($t > T_{\text{expiry}}$)**: The chain deadlocks. Anyone can trigger `triggerTimeout` to freeze state transitions and mark the chain as `TimedOut`.
 
 ---
 
