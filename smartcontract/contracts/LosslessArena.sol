@@ -11,7 +11,7 @@ import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
  * A competitive arcade fighting game where avatars battle to win the accrued DeFi yield
  * of the entire arena's staked pool, while every player's principal remains 100% safe.
  */
-contract LosslessArena is Ownable, ReentrancyGuard {
+contract LosslessArena is ReentrancyGuard {
     
     struct Gladiator {
         address player;
@@ -36,15 +36,42 @@ contract LosslessArena is Ownable, ReentrancyGuard {
     uint256 public accumulatedPrizePool;
     
     // Game Rules
-    uint256 public constant ENTRY_FEE = 10 ether; // 10 CELO
-    uint256 public constant FIGHT_COOLDOWN = 1 minutes;
+    uint256 public entryFee = 10 ether; // 10 CELO
+    uint256 public fightCooldown = 1 minutes;
     
+    // Admin Role Flexibility (70% Threshold)
+    mapping(address => bool) public isAdmin;
+    address[] public adminList;
+
+    struct AdminProposal {
+        address target;
+        bool isAdd;
+        uint256 approvals;
+        bool executed;
+    }
+    
+    // proposalId => adminAddress => hasApproved
+    mapping(uint256 => mapping(address => bool)) public proposalApprovals;
+    
+    uint256 public nextProposalId;
+    mapping(uint256 => AdminProposal) public proposals;
+
     event ArenaEntered(address indexed player, uint256 amount);
     event ArenaExited(address indexed player, uint256 amount);
     event FightResolved(address indexed winner, address indexed loser, uint256 yieldWon);
+    event AdminProposalCreated(uint256 indexed proposalId, address indexed target, bool isAdd);
+    event AdminProposalApproved(uint256 indexed proposalId, address indexed approver);
+    event AdminProposalExecuted(uint256 indexed proposalId, address indexed target, bool isAdd);
 
-    constructor() Ownable(msg.sender) {
+    modifier onlyAdmin() {
+        require(isAdmin[msg.sender], "Not an admin");
+        _;
+    }
+
+    constructor() {
         lastYieldUpdate = block.timestamp;
+        isAdmin[msg.sender] = true;
+        adminList.push(msg.sender);
     }
 
     /**
@@ -63,7 +90,7 @@ contract LosslessArena is Ownable, ReentrancyGuard {
      * @notice Stake CELO to enter the Lossless Arena.
      */
     function enterArena() external payable nonReentrant {
-        require(msg.value == ENTRY_FEE, "Must stake exactly 10 CELO to enter");
+        require(msg.value == entryFee, "Must stake exact entry fee to enter");
         
         _updateYield();
         
@@ -101,7 +128,7 @@ contract LosslessArena is Ownable, ReentrancyGuard {
         require(gladiators[msg.sender].isActive, "You are not in the arena");
         require(gladiators[opponent].isActive, "Opponent not in the arena");
         require(msg.sender != opponent, "Cannot fight yourself");
-        require(block.timestamp >= gladiators[msg.sender].lastFightAt + FIGHT_COOLDOWN, "Fight cooldown active");
+        require(block.timestamp >= gladiators[msg.sender].lastFightAt + fightCooldown, "Fight cooldown active");
         
         _updateYield();
         
@@ -191,9 +218,87 @@ contract LosslessArena is Ownable, ReentrancyGuard {
     }
     
     // Admin
-    function setApyBasisPoints(uint256 newApy) external onlyOwner {
+    function setApyBasisPoints(uint256 newApy) external onlyAdmin {
         _updateYield();
         apyBasisPoints = newApy;
+    }
+
+    function setEntryFee(uint256 _entryFee) external onlyAdmin {
+        entryFee = _entryFee;
+    }
+
+    function setFightCooldown(uint256 _fightCooldown) external onlyAdmin {
+        fightCooldown = _fightCooldown;
+    }
+
+    // ---------------------------------------------
+    // 70% ADMIN THRESHOLD LOGIC
+    // ---------------------------------------------
+
+    function proposeAdminChange(address target, bool isAdd) external onlyAdmin {
+        require(isAdmin[target] != isAdd, "Target already in desired state");
+        
+        if (adminList.length == 1) {
+            // Immediate execution if only 1 admin exists
+            _executeAdminChange(target, isAdd);
+            return;
+        }
+
+        uint256 proposalId = nextProposalId++;
+        AdminProposal storage p = proposals[proposalId];
+        p.target = target;
+        p.isAdd = isAdd;
+        
+        proposalApprovals[proposalId][msg.sender] = true;
+        p.approvals = 1;
+        
+        emit AdminProposalCreated(proposalId, target, isAdd);
+        emit AdminProposalApproved(proposalId, msg.sender);
+
+        _checkAndExecuteProposal(proposalId);
+    }
+
+    function approveAdminChange(uint256 proposalId) external onlyAdmin {
+        AdminProposal storage p = proposals[proposalId];
+        require(!p.executed, "Already executed");
+        require(!proposalApprovals[proposalId][msg.sender], "Already approved");
+        require(isAdmin[p.target] != p.isAdd, "Target already in desired state");
+
+        proposalApprovals[proposalId][msg.sender] = true;
+        p.approvals++;
+        
+        emit AdminProposalApproved(proposalId, msg.sender);
+
+        _checkAndExecuteProposal(proposalId);
+    }
+
+    function _checkAndExecuteProposal(uint256 proposalId) internal {
+        AdminProposal storage p = proposals[proposalId];
+        
+        // 70% threshold calculation
+        uint256 requiredApprovals = (adminList.length * 70 + 99) / 100;
+        
+        if (p.approvals >= requiredApprovals) {
+            p.executed = true;
+            _executeAdminChange(p.target, p.isAdd);
+            emit AdminProposalExecuted(proposalId, p.target, p.isAdd);
+        }
+    }
+
+    function _executeAdminChange(address target, bool isAdd) internal {
+        if (isAdd) {
+            isAdmin[target] = true;
+            adminList.push(target);
+        } else {
+            isAdmin[target] = false;
+            for (uint256 i = 0; i < adminList.length; i++) {
+                if (adminList[i] == target) {
+                    adminList[i] = adminList[adminList.length - 1];
+                    adminList.pop();
+                    break;
+                }
+            }
+        }
     }
     
     // Allow contract to hold yield internally for demo
