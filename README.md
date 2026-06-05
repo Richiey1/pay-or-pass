@@ -77,6 +77,7 @@ The Celo PayOrPass Web3 client is engineered for visual premium and fluid engage
 * **On-Chain Social Pipeline Renders**: Queries `getPasses` dynamically from Celo ledger logs to compile a visual timeline of the social path history showing addresses, pass steps, amounts, and dates.
 * **Real-time Countdown Ticker**: Features a ticking millisecond-accurate timer showing remaining time before a deadlock.
 * **Wallet Auto-Connect & MiniPay Live Support**: Natively detects Opera Mini and Valora browser providers for zero-friction transaction signing.
+* **Secure Admin Governance Panel**: An owner-exclusive UI module restricted to the contract deployer. Allows real-time tuning of game-theoretic constants: Round Timeouts, Escrow Pass Multipliers, and Simulated Yield APY.
 
 ---
 
