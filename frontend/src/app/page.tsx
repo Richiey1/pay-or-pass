@@ -129,13 +129,13 @@ export default function LosslessArenaHome() {
         {/* Header */}
         <div className="text-center space-y-4">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-500/10 border border-red-500/20 text-red-400 text-[10px] font-black uppercase tracking-widest mb-4">
-            <Swords className="w-3 h-3 animate-pulse" /> Lossless Combat Protocol
+            <Swords className="w-3 h-3 animate-pulse" /> Lossless Arena v2.0
           </div>
           <h1 className="text-6xl md:text-8xl font-black tracking-tighter uppercase italic leading-[0.8] text-transparent bg-clip-text bg-gradient-to-br from-white to-red-600">
-            LOSSLESS<br/>ARENA
+            PAYOR<br/>PASS
           </h1>
           <p className="text-red-200/50 font-bold uppercase text-sm tracking-widest max-w-2xl mx-auto">
-            Stake 10 CELO to enter the colosseum. Fight for the accrued DeFi yield of the entire arena. 100% Principal Protection.
+            An Elite Retail Onboarding Play. We abstract away complex DeFi yield generation behind a fun, risk-free arcade game to drive massive Daily Active Users. Stake 10 CELO, fight for the accrued yield, keep your principal 100% safe.
           </p>
         </div>
 
