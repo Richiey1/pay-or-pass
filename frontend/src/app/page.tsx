@@ -135,7 +135,7 @@ export default function LosslessArenaHome() {
             PAYOR<br/>PASS
           </h1>
           <p className="text-red-200/50 font-bold uppercase text-sm tracking-widest max-w-2xl mx-auto">
-            Stake 10 CELO to enter the colosseum. Fight for the accrued DeFi yield of the entire arena. 100% Principal Protection.
+            An Elite Retail Onboarding Play. We abstract away complex DeFi yield generation behind a fun, risk-free arcade game to drive massive Daily Active Users. Stake 10 CELO, fight for the accrued yield, keep your principal 100% safe.
           </p>
         </div>
 
