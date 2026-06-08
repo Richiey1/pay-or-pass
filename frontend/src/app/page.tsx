@@ -144,7 +144,7 @@ export default function LosslessArenaHome() {
       </div>
 
       {/* Header Bar */}
-      <header className="relative z-20 flex items-center justify-between p-4 md:p-6 border-b border-white/5 bg-black/40 backdrop-blur-md">
+      <header className="relative z-20 flex items-center justify-between p-4 md:p-6 bg-transparent">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded bg-red-600 flex items-center justify-center">
             <Swords className="w-4 h-4 text-white animate-pulse" />
@@ -169,9 +169,6 @@ export default function LosslessArenaHome() {
       <main className="relative z-10 flex-1 max-w-6xl mx-auto w-full p-4 sm:p-6 md:p-8 flex flex-col justify-center">
         {!isConnected ? (
           <div className="flex flex-col items-center justify-center text-center py-12 px-4 max-w-2xl mx-auto space-y-8 my-auto">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-500/10 border border-red-500/20 text-red-400 text-[10px] font-black uppercase tracking-widest">
-              <Swords className="w-3 h-3 animate-pulse" /> Lossless Arena v2.0
-            </div>
             
             <h1 className="text-7xl md:text-9xl font-black tracking-tighter uppercase italic leading-[0.8] text-transparent bg-clip-text bg-gradient-to-br from-white to-red-600">
               PAYOR<br/>PASS
