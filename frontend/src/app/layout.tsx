@@ -1,7 +1,6 @@
 import "./globals.css";
 import { Web3Providers } from "./providers";
 import { ToastProvider } from "@/components/ui/Toast";
-import OnboardingTour from "@/components/onboarding/OnboardingTour";
 
 export const metadata = {
   title: "PayOrPass — Social Payment Game",
@@ -34,7 +33,6 @@ export default function RootLayout({
         <Web3Providers>
           <ToastProvider>
             {children}
-            <OnboardingTour />
           </ToastProvider>
         </Web3Providers>
       </body>
