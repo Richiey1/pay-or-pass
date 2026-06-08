@@ -223,8 +223,12 @@ export default function LosslessArenaHome() {
                 
                 {!isInArena ? (
                   <div className="space-y-6 w-full mt-4">
-                    <div className="w-24 h-24 mx-auto rounded-full border-4 border-white/10 bg-white/5 flex items-center justify-center">
-                      <User className="w-10 h-10 text-white/20" />
+                    <div className="w-24 h-24 mx-auto rounded-full border-4 border-white/10 bg-white/5 overflow-hidden relative flex items-center justify-center shadow-lg">
+                      <img
+                        src="https://api.dicebear.com/7.x/bottts/svg?seed=Gladiator"
+                        alt="Gladiator Avatar"
+                        className="w-full h-full object-cover"
+                      />
                     </div>
                     <div className="text-white/50 text-sm">You are currently sitting in the stands.</div>
                     <button 
@@ -236,9 +240,13 @@ export default function LosslessArenaHome() {
                   </div>
                 ) : (
                   <div className="space-y-6 w-full">
-                    <div className="w-24 h-24 mx-auto rounded-full border-4 border-red-500 bg-red-500/20 flex items-center justify-center relative shadow-[0_0_30px_rgba(220,38,38,0.5)]">
-                      <Skull className="w-10 h-10 text-red-500" />
-                      <div className="absolute -bottom-2 -right-2 bg-red-600 text-[10px] font-black px-2 py-1 rounded border border-black">ACTIVE</div>
+                    <div className="w-24 h-24 mx-auto rounded-full border-4 border-red-500 overflow-hidden bg-red-500/10 relative shadow-[0_0_30px_rgba(220,38,38,0.5)] flex items-center justify-center">
+                      <img
+                        src={`https://api.dicebear.com/7.x/bottts/svg?seed=${address}`}
+                        alt="My Gladiator"
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute -bottom-2 -right-2 bg-red-600 text-[10px] font-black px-2 py-1 rounded border border-black z-10">ACTIVE</div>
                     </div>
                     
                     <div className="grid grid-cols-2 gap-4">
@@ -284,15 +292,19 @@ export default function LosslessArenaHome() {
                           <div 
                             key={playerAddr}
                             onClick={() => setSelectedOpponent(playerAddr)}
-                            className={`cursor-pointer p-4 rounded-2xl border transition-all flex items-center justify-between ${
+                            className={`group cursor-pointer p-4 rounded-2xl border transition-all flex items-center justify-between ${
                               isSelected 
                                 ? "bg-red-900/40 border-red-500 shadow-[0_0_20px_rgba(220,38,38,0.3)]" 
-                                : "bg-white/5 border-white/10 hover:border-white/30"
+                                : "bg-white/5 border-white/10 hover:border-red-500/30 hover:bg-red-950/10"
                             }`}
                           >
                             <div className="flex items-center gap-3">
-                              <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isSelected ? 'bg-red-500' : 'bg-white/10'}`}>
-                                <User className={`w-5 h-5 ${isSelected ? 'text-white' : 'text-white/50'}`} />
+                              <div className={`w-10 h-10 rounded-full overflow-hidden flex items-center justify-center border-2 transition-all ${isSelected ? 'border-red-500 bg-red-500/20 animate-pulse' : 'border-white/10 bg-white/5'}`}>
+                                <img
+                                  src={`https://api.dicebear.com/7.x/bottts/svg?seed=${playerAddr}`}
+                                  alt="Gladiator"
+                                  className="w-full h-full object-cover"
+                                />
                               </div>
                               <div>
                                 <div className="font-mono text-sm font-bold text-white/80">
@@ -300,6 +312,17 @@ export default function LosslessArenaHome() {
                                 </div>
                                 <div className="text-[10px] text-white/40 font-black tracking-widest mt-1">GLADIATOR</div>
                               </div>
+                            </div>
+                            <div>
+                              {isSelected ? (
+                                <span className="text-[9px] font-black text-red-500 px-2.5 py-1 rounded bg-red-950/30 border border-red-500/50 uppercase tracking-widest flex items-center gap-1 animate-pulse">
+                                  <Crosshair className="w-3 h-3 text-red-500" /> LOCKED
+                                </span>
+                              ) : (
+                                <span className="text-[9px] font-black text-white/30 px-2.5 py-1 rounded bg-white/5 border border-white/5 uppercase tracking-widest group-hover:text-red-500 group-hover:border-red-500/30 transition-all">
+                                  SELECT
+                                </span>
+                              )}
                             </div>
                           </div>
                         )
