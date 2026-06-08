@@ -146,9 +146,11 @@ export default function LosslessArenaHome() {
       {/* Header Bar */}
       <header className="relative z-20 flex items-center justify-between p-4 md:p-6 bg-transparent">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded bg-red-600 flex items-center justify-center">
-            <Swords className="w-4 h-4 text-white animate-pulse" />
-          </div>
+          <img 
+            src="/payorpass-logo.png" 
+            alt="PayorPass Logo" 
+            className="w-8 h-8 object-contain" 
+          />
           <span className="text-xl font-black tracking-tighter uppercase italic text-transparent bg-clip-text bg-gradient-to-r from-white to-red-500">
             PAYOR<span className="text-red-600 font-black">PASS</span>
           </span>

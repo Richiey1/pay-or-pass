@@ -14,7 +14,7 @@ const metadata = {
   name: 'PayOrPass',
   description: 'Social Game Theory Payment Protocol on Celo',
   url: 'https://payorpass.vercel.app',
-  icons: ['/paynpass-logo.png'],
+  icons: ['/payorpass-logo.svg'],
 }
 
 const wagmiAdapter = new WagmiAdapter({

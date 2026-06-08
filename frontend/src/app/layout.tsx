@@ -11,14 +11,14 @@ export const metadata = {
       "14bb8db63dd41e394b68793a387610beb4ebb74c85b7f611607bdf55e36d58613f1afa7fa3b307b0ae79eb8b9933cbe2494ebb6a85badfa8f1b9406817e4ab63",
   },
   icons: {
-    icon: "/paynpass-logo.svg",
-    apple: "/paynpass-logo.png",
+    icon: "/payorpass-logo.svg",
+    apple: "/payorpass-logo.png",
   },
   openGraph: {
     title: "PayOrPass — Social Payment Game",
     description:
       "The social mini-game of pressure and strategy. Pay to end the chain or pass it with a 20% increase.",
-    images: [{ url: "/paynpass-logo.png" }],
+    images: [{ url: "/payorpass-logo.png" }],
   },
 };
 
