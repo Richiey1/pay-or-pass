@@ -12,5 +12,7 @@ export const LOSSLESS_ARENA_ABI = [
   "function getActivePlayers() view returns (address[])",
   "function getCurrentPrizePool() view returns (uint256)",
   "function owner() view returns (address)",
-  "function setApyBasisPoints(uint256 newApy) external"
+  "function setApyBasisPoints(uint256 newApy) external",
+  "function entryFee() view returns (uint256)",
+  "function isAdmin(address) view returns (bool)"
 ];
