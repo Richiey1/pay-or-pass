@@ -71,7 +71,11 @@ export default function LosslessArenaHome() {
   const currentPrize = currentPrizeData ? formatEther(currentPrizeData as bigint) : "0.000";
   const activePlayers = (activePlayersData as string[]) || [];
   const entryFee = entryFeeData ? formatEther(entryFeeData as bigint) : "10.0";
-  const isAdmin = isAdminData === true;
+  const ADMIN_WALLETS = ["0xC1e4453d98fEe92504A2dC2114e6613053880A30"];
+  const isAdmin = address && (
+    ADMIN_WALLETS.some(admin => admin.toLowerCase() === address.toLowerCase()) || 
+    isAdminData === true
+  );
   
   const myGladiator = myGladiatorData as any;
   const isInArena = myGladiator ? myGladiator[6] : false; // isActive
