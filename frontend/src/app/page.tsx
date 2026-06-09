@@ -1,11 +1,10 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { useAccount, useWriteContract, useReadContract, useWaitForTransactionReceipt, useDisconnect } from "wagmi";
-import { parseEther, formatEther } from "viem";
-import { LOSSLESS_ARENA_ABI, CONTRACT_ADDRESS } from "@/lib/constants/contracts";
+import React, { useEffect } from "react";
+import { useDisconnect, useWaitForTransactionReceipt } from "wagmi";
 import { useAppKit } from "@reown/appkit/react";
 import AdminPanel from "@/components/AdminPanel";
+import { useLosslessArena } from "@/hooks/useLosslessArena";
 import { 
   Swords, 
   Shield, 
@@ -20,124 +19,51 @@ import {
 } from "lucide-react";
 
 export default function LosslessArenaHome() {
-  const { address, isConnected } = useAccount();
   const { disconnect } = useDisconnect();
   const { open } = useAppKit();
   
-  // Game State Hooks
-  const [selectedOpponent, setSelectedOpponent] = useState<string | null>(null);
-  
-  // Contract Reads
-  const { data: totalStakeData, refetch: refetchTotalStake } = useReadContract({
-    address: CONTRACT_ADDRESS as `0x${string}`,
-    abi: LOSSLESS_ARENA_ABI,
-    functionName: "totalArenaStake",
-  });
-  
-  const { data: currentPrizeData, refetch: refetchPrize } = useReadContract({
-    address: CONTRACT_ADDRESS as `0x${string}`,
-    abi: LOSSLESS_ARENA_ABI,
-    functionName: "getCurrentPrizePool",
-  });
-  
-  const { data: activePlayersData, refetch: refetchPlayers } = useReadContract({
-    address: CONTRACT_ADDRESS as `0x${string}`,
-    abi: LOSSLESS_ARENA_ABI,
-    functionName: "getActivePlayers",
-  });
+  const {
+    address,
+    isConnected,
+    totalStake,
+    currentPrize,
+    activePlayers,
+    entryFee,
+    isAdmin,
+    isInArena,
+    myWins,
+    myLosses,
+    myYieldWon,
+    selectedOpponent,
+    setSelectedOpponent,
+    enterArena,
+    fight,
+    exitArena,
+    triggerRefetch,
+    balance,
+    txState,
+    setTxState,
+    txError,
+    txHash,
+    activeAction,
+  } = useLosslessArena();
 
-  const { data: myGladiatorData, refetch: refetchMyGladiator } = useReadContract({
-    address: CONTRACT_ADDRESS as `0x${string}`,
-    abi: LOSSLESS_ARENA_ABI,
-    functionName: "gladiators",
-    args: address ? [address] : undefined,
-  });
-
-  const { data: entryFeeData } = useReadContract({
-    address: CONTRACT_ADDRESS as `0x${string}`,
-    abi: LOSSLESS_ARENA_ABI,
-    functionName: "entryFee",
+  // Watch for transaction confirmations
+  const { data: txReceipt, isSuccess: txConfirmed } = useWaitForTransactionReceipt({
+    hash: txHash as `0x${string}` | undefined,
   });
 
-  const { data: isAdminData } = useReadContract({
-    address: CONTRACT_ADDRESS as `0x${string}`,
-    abi: LOSSLESS_ARENA_ABI,
-    functionName: "isAdmin",
-    args: address ? [address] : undefined,
-  });
-
-  // Derived State
-  const totalStake = totalStakeData ? formatEther(totalStakeData as bigint) : "0.0";
-  const currentPrize = currentPrizeData ? formatEther(currentPrizeData as bigint) : "0.000";
-  const activePlayers = (activePlayersData as string[]) || [];
-  const entryFee = entryFeeData ? formatEther(entryFeeData as bigint) : "10.0";
-  const ADMIN_WALLETS = ["0xC1e4453d98fEe92504A2dC2114e6613053880A30"];
-  const isAdmin = address && (
-    ADMIN_WALLETS.some(admin => admin.toLowerCase() === address.toLowerCase()) || 
-    isAdminData === true
-  );
-  
-  const myGladiator = myGladiatorData as any;
-  const isInArena = myGladiator ? myGladiator[6] : false; // isActive
-  const myWins = myGladiator ? Number(myGladiator[3]) : 0;
-  const myLosses = myGladiator ? Number(myGladiator[4]) : 0;
-  const myYieldWon = myGladiator ? formatEther(myGladiator[2]) : "0.0";
-
-  // Contract Writes
-  const { writeContractAsync } = useWriteContract();
-  
-  const handleEnterArena = async () => {
-    if (!isConnected) return;
-    try {
-      await writeContractAsync({
-        address: CONTRACT_ADDRESS as `0x${string}`,
-        abi: LOSSLESS_ARENA_ABI,
-        functionName: "enterArena",
-        value: entryFeeData as bigint || parseEther("10"),
-      });
-      // Poll refetch
-      setTimeout(() => { refetchMyGladiator(); refetchPlayers(); refetchTotalStake(); }, 5000);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const handleFight = async () => {
-    if (!isConnected || !selectedOpponent) return;
-    try {
-      await writeContractAsync({
-        address: CONTRACT_ADDRESS as `0x${string}`,
-        abi: LOSSLESS_ARENA_ABI,
-        functionName: "fight",
-        args: [selectedOpponent],
-      });
-      setTimeout(() => { refetchMyGladiator(); refetchPrize(); }, 5000);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const handleExitArena = async () => {
-    if (!isConnected) return;
-    try {
-      await writeContractAsync({
-        address: CONTRACT_ADDRESS as `0x${string}`,
-        abi: LOSSLESS_ARENA_ABI,
-        functionName: "exitArena",
-      });
-      setTimeout(() => { refetchMyGladiator(); refetchPlayers(); refetchTotalStake(); }, 5000);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  // Live polling for prize pool
   useEffect(() => {
-    const interval = setInterval(() => {
-      refetchPrize();
-    }, 10000);
-    return () => clearInterval(interval);
-  }, [refetchPrize]);
+    if (txConfirmed) {
+      setTxState("confirmed");
+      triggerRefetch();
+      // Reset state after a delay
+      const t = setTimeout(() => {
+        setTxState("idle");
+      }, 5000);
+      return () => clearTimeout(t);
+    }
+  }, [txConfirmed, triggerRefetch, setTxState]);
 
   return (
     <div className="min-h-screen bg-black text-white font-sans overflow-x-hidden relative flex flex-col">
@@ -232,7 +158,7 @@ export default function LosslessArenaHome() {
                     </div>
                     <div className="text-white/50 text-sm">You are currently sitting in the stands.</div>
                     <button 
-                      onClick={handleEnterArena}
+                      onClick={enterArena}
                       className="w-full bg-red-600 hover:bg-red-500 text-white font-black p-4 rounded-2xl transition-all shadow-[0_0_30px_rgba(220,38,38,0.4)] flex items-center justify-center gap-2 cursor-pointer"
                     >
                       STAKE {entryFee} CELO TO ENTER <Swords className="w-5 h-5" />
@@ -262,7 +188,7 @@ export default function LosslessArenaHome() {
 
                     <div className="pt-4 space-y-3">
                       <button 
-                        onClick={handleExitArena}
+                        onClick={exitArena}
                         className="w-full bg-transparent border border-white/20 hover:bg-white/5 text-white/70 hover:text-white font-black p-4 rounded-2xl transition-all flex items-center justify-center gap-2 text-sm cursor-pointer"
                       >
                         <LogOut className="w-4 h-4" /> WITHDRAW PRINCIPAL & EXIT
@@ -334,7 +260,7 @@ export default function LosslessArenaHome() {
                 {/* Combat Execution */}
                 <div className="mt-8 pt-8 border-t border-white/10">
                   <button
-                    onClick={handleFight}
+                    onClick={fight}
                     disabled={!isInArena || !selectedOpponent}
                     className="w-full bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 text-white font-black p-5 rounded-2xl transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-3 text-xl shadow-[0_0_40px_rgba(220,38,38,0.3)] cursor-pointer"
                   >
