@@ -1,11 +1,11 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useAccount, useWriteContract, useReadContract, useWaitForTransactionReceipt, useDisconnect } from "wagmi";
-import { parseEther, formatEther } from "viem";
-import { LOSSLESS_ARENA_ABI, CONTRACT_ADDRESS } from "@/lib/constants/contracts";
+import { useDisconnect, useWaitForTransactionReceipt } from "wagmi";
 import { useAppKit } from "@reown/appkit/react";
 import AdminPanel from "@/components/AdminPanel";
+import { useLosslessArena } from "@/hooks/useLosslessArena";
+import { TransactionModal } from "@/components/ui/TransactionModal";
 import { 
   Swords, 
   Shield, 
@@ -20,120 +20,58 @@ import {
 } from "lucide-react";
 
 export default function LosslessArenaHome() {
-  const { address, isConnected } = useAccount();
   const { disconnect } = useDisconnect();
   const { open } = useAppKit();
+  const [stakeAmount, setStakeAmount] = useState("");
   
-  // Game State Hooks
-  const [selectedOpponent, setSelectedOpponent] = useState<string | null>(null);
-  
-  // Contract Reads
-  const { data: totalStakeData, refetch: refetchTotalStake } = useReadContract({
-    address: CONTRACT_ADDRESS as `0x${string}`,
-    abi: LOSSLESS_ARENA_ABI,
-    functionName: "totalArenaStake",
-  });
-  
-  const { data: currentPrizeData, refetch: refetchPrize } = useReadContract({
-    address: CONTRACT_ADDRESS as `0x${string}`,
-    abi: LOSSLESS_ARENA_ABI,
-    functionName: "getCurrentPrizePool",
-  });
-  
-  const { data: activePlayersData, refetch: refetchPlayers } = useReadContract({
-    address: CONTRACT_ADDRESS as `0x${string}`,
-    abi: LOSSLESS_ARENA_ABI,
-    functionName: "getActivePlayers",
-  });
+  const {
+    address,
+    isConnected,
+    totalStake,
+    currentPrize,
+    activePlayers,
+    entryFee,
+    isAdmin,
+    isInArena,
+    myWins,
+    myLosses,
+    myYieldWon,
+    selectedOpponent,
+    setSelectedOpponent,
+    enterArena,
+    fight,
+    exitArena,
+    triggerRefetch,
+    balance,
+    txState,
+    setTxState,
+    txError,
+    txHash,
+    activeAction,
+  } = useLosslessArena();
 
-  const { data: myGladiatorData, refetch: refetchMyGladiator } = useReadContract({
-    address: CONTRACT_ADDRESS as `0x${string}`,
-    abi: LOSSLESS_ARENA_ABI,
-    functionName: "gladiators",
-    args: address ? [address] : undefined,
-  });
-
-  const { data: entryFeeData } = useReadContract({
-    address: CONTRACT_ADDRESS as `0x${string}`,
-    abi: LOSSLESS_ARENA_ABI,
-    functionName: "entryFee",
+  // Watch for transaction confirmations
+  const { data: txReceipt, isSuccess: txConfirmed } = useWaitForTransactionReceipt({
+    hash: txHash as `0x${string}` | undefined,
   });
 
-  const { data: isAdminData } = useReadContract({
-    address: CONTRACT_ADDRESS as `0x${string}`,
-    abi: LOSSLESS_ARENA_ABI,
-    functionName: "isAdmin",
-    args: address ? [address] : undefined,
-  });
-
-  // Derived State
-  const totalStake = totalStakeData ? formatEther(totalStakeData as bigint) : "0.0";
-  const currentPrize = currentPrizeData ? formatEther(currentPrizeData as bigint) : "0.000";
-  const activePlayers = (activePlayersData as string[]) || [];
-  const entryFee = entryFeeData ? formatEther(entryFeeData as bigint) : "10.0";
-  const isAdmin = isAdminData === true;
-  
-  const myGladiator = myGladiatorData as any;
-  const isInArena = myGladiator ? myGladiator[6] : false; // isActive
-  const myWins = myGladiator ? Number(myGladiator[3]) : 0;
-  const myLosses = myGladiator ? Number(myGladiator[4]) : 0;
-  const myYieldWon = myGladiator ? formatEther(myGladiator[2]) : "0.0";
-
-  // Contract Writes
-  const { writeContractAsync } = useWriteContract();
-  
-  const handleEnterArena = async () => {
-    if (!isConnected) return;
-    try {
-      await writeContractAsync({
-        address: CONTRACT_ADDRESS as `0x${string}`,
-        abi: LOSSLESS_ARENA_ABI,
-        functionName: "enterArena",
-        value: entryFeeData as bigint || parseEther("10"),
-      });
-      // Poll refetch
-      setTimeout(() => { refetchMyGladiator(); refetchPlayers(); refetchTotalStake(); }, 5000);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const handleFight = async () => {
-    if (!isConnected || !selectedOpponent) return;
-    try {
-      await writeContractAsync({
-        address: CONTRACT_ADDRESS as `0x${string}`,
-        abi: LOSSLESS_ARENA_ABI,
-        functionName: "fight",
-        args: [selectedOpponent],
-      });
-      setTimeout(() => { refetchMyGladiator(); refetchPrize(); }, 5000);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const handleExitArena = async () => {
-    if (!isConnected) return;
-    try {
-      await writeContractAsync({
-        address: CONTRACT_ADDRESS as `0x${string}`,
-        abi: LOSSLESS_ARENA_ABI,
-        functionName: "exitArena",
-      });
-      setTimeout(() => { refetchMyGladiator(); refetchPlayers(); refetchTotalStake(); }, 5000);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  // Live polling for prize pool
   useEffect(() => {
-    const interval = setInterval(() => {
-      refetchPrize();
-    }, 10000);
-    return () => clearInterval(interval);
-  }, [refetchPrize]);
+    if (entryFee && !stakeAmount) {
+      setStakeAmount(entryFee);
+    }
+  }, [entryFee, stakeAmount]);
+
+  useEffect(() => {
+    if (txConfirmed) {
+      setTxState("confirmed");
+      triggerRefetch();
+      // Reset state after a delay
+      const t = setTimeout(() => {
+        setTxState("idle");
+      }, 5000);
+      return () => clearTimeout(t);
+    }
+  }, [txConfirmed, triggerRefetch, setTxState]);
 
   return (
     <div className="min-h-screen bg-black text-white font-sans overflow-x-hidden relative flex flex-col">
@@ -218,20 +156,83 @@ export default function LosslessArenaHome() {
                 <h2 className="text-2xl font-black italic tracking-widest mb-6">MY GLADIATOR</h2>
                 
                 {!isInArena ? (
-                  <div className="space-y-6 w-full mt-4">
-                    <div className="w-24 h-24 mx-auto rounded-full border-4 border-white/10 bg-white/5 overflow-hidden relative flex items-center justify-center shadow-lg">
+                  <div className="space-y-5 w-full mt-4">
+                    <div className="w-20 h-20 mx-auto rounded-full border-4 border-white/10 bg-white/5 overflow-hidden relative flex items-center justify-center shadow-lg">
                       <img
                         src="https://api.dicebear.com/7.x/bottts/svg?seed=Gladiator"
                         alt="Gladiator Avatar"
                         className="w-full h-full object-cover"
                       />
                     </div>
-                    <div className="text-white/50 text-sm">You are currently sitting in the stands.</div>
+                    <div className="text-white/50 text-xs">You are currently sitting in the stands.</div>
+                    
+                    <div className="space-y-3 w-full text-left">
+                      <div className="flex justify-between items-center text-[10px] text-white/50 font-black uppercase tracking-wider">
+                        <span>Stake Amount</span>
+                        {balance && (
+                          <span>
+                            Bal: {parseFloat(balance.formatted).toFixed(4)} CELO 
+                            <span className="text-red-400 font-mono"> (${(parseFloat(balance.formatted) * 0.62).toFixed(2)})</span>
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="flex gap-2">
+                        <div className="relative flex-1">
+                          <input
+                            type="number"
+                            step="0.1"
+                            min={entryFee}
+                            value={stakeAmount}
+                            onChange={(e) => setStakeAmount(e.target.value)}
+                            placeholder={`Min ${entryFee}`}
+                            className="w-full bg-black border border-white/10 focus:border-red-500/50 rounded-xl px-4 py-3 text-xs font-black outline-none transition-all text-white pr-14"
+                          />
+                          <span className="absolute right-4 top-3 text-[10px] text-white/30 font-black">CELO</span>
+                        </div>
+                        <button
+                          onClick={() => {
+                            if (balance) {
+                              const maxStake = Math.max(0, parseFloat(balance.formatted) - 0.05);
+                              setStakeAmount(maxStake.toFixed(4));
+                            }
+                          }}
+                          className="px-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black uppercase text-white transition-all cursor-pointer"
+                        >
+                          Max
+                        </button>
+                      </div>
+
+                      {stakeAmount && !isNaN(parseFloat(stakeAmount)) && (
+                        <div className="text-[10px] text-red-400 font-mono">
+                          Est. Value: ${(parseFloat(stakeAmount) * 0.62).toFixed(2)} USD
+                        </div>
+                      )}
+
+                      {balance && stakeAmount && parseFloat(stakeAmount) > parseFloat(balance.formatted) && (
+                        <div className="text-center text-[9px] text-red-500 font-black uppercase tracking-wider">
+                          ⚠️ Insufficient balance for stake
+                        </div>
+                      )}
+                      
+                      {stakeAmount && parseFloat(stakeAmount) < parseFloat(entryFee) && (
+                        <div className="text-center text-[9px] text-red-500 font-black uppercase tracking-wider">
+                          ⚠️ Minimum Stake is {entryFee} CELO
+                        </div>
+                      )}
+                    </div>
+
                     <button 
-                      onClick={handleEnterArena}
-                      className="w-full bg-red-600 hover:bg-red-500 text-white font-black p-4 rounded-2xl transition-all shadow-[0_0_30px_rgba(220,38,38,0.4)] flex items-center justify-center gap-2 cursor-pointer"
+                      onClick={() => enterArena(stakeAmount)}
+                      disabled={
+                        !stakeAmount || 
+                        isNaN(parseFloat(stakeAmount)) || 
+                        parseFloat(stakeAmount) < parseFloat(entryFee) ||
+                        (balance ? parseFloat(stakeAmount) > parseFloat(balance.formatted) : false)
+                      }
+                      className="w-full bg-red-600 hover:bg-red-500 text-white font-black p-4 rounded-2xl transition-all shadow-[0_0_30px_rgba(220,38,38,0.4)] flex items-center justify-center gap-2 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed text-xs"
                     >
-                      STAKE {entryFee} CELO TO ENTER <Swords className="w-5 h-5" />
+                      STAKE TO ENTER <Swords className="w-5 h-5" />
                     </button>
                   </div>
                 ) : (
@@ -258,7 +259,7 @@ export default function LosslessArenaHome() {
 
                     <div className="pt-4 space-y-3">
                       <button 
-                        onClick={handleExitArena}
+                        onClick={exitArena}
                         className="w-full bg-transparent border border-white/20 hover:bg-white/5 text-white/70 hover:text-white font-black p-4 rounded-2xl transition-all flex items-center justify-center gap-2 text-sm cursor-pointer"
                       >
                         <LogOut className="w-4 h-4" /> WITHDRAW PRINCIPAL & EXIT
@@ -330,7 +331,7 @@ export default function LosslessArenaHome() {
                 {/* Combat Execution */}
                 <div className="mt-8 pt-8 border-t border-white/10">
                   <button
-                    onClick={handleFight}
+                    onClick={fight}
                     disabled={!isInArena || !selectedOpponent}
                     className="w-full bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 text-white font-black p-5 rounded-2xl transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-3 text-xl shadow-[0_0_40px_rgba(220,38,38,0.3)] cursor-pointer"
                   >
@@ -353,6 +354,15 @@ export default function LosslessArenaHome() {
           </div>
         )}
       </main>
+
+      <TransactionModal
+        txState={txState}
+        txError={txError}
+        txHash={txHash}
+        activeAction={activeAction}
+        entryFee={entryFee}
+        onClose={() => setTxState("idle")}
+      />
     </div>
   );
 }

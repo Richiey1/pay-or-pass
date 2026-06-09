@@ -1,12 +1,27 @@
 "use client";
 
 import { useState } from "react";
-import { useReadContract, useWriteContract } from "wagmi";
+import { useAccount, useReadContract, useWriteContract } from "wagmi";
 import { ShieldCheck, Loader2, Save } from "lucide-react";
 import { CONTRACT_ADDRESS, LOSSLESS_ARENA_ABI } from "@/lib/constants/contracts";
 import { useGameToast } from "@/components/ui/Toast";
 
 export default function AdminPanel() {
+  const { address } = useAccount();
+  const ADMIN_WALLETS = ["0xC1e4453d98fEe92504A2dC2114e6613053880A30"];
+
+  const { data: isAdminData } = useReadContract({
+    address: CONTRACT_ADDRESS as `0x${string}`,
+    abi: LOSSLESS_ARENA_ABI,
+    functionName: "isAdmin",
+    args: address ? [address] : undefined,
+  });
+
+  const isWalletAdmin = address && (
+    ADMIN_WALLETS.some(admin => admin.toLowerCase() === address.toLowerCase()) || 
+    isAdminData === true
+  );
+
   const [apyValue, setApyValue] = useState("");
 
   const { data: currentApy, refetch: refetchApy } = useReadContract({
@@ -18,6 +33,8 @@ export default function AdminPanel() {
   const { writeContractAsync } = useWriteContract();
   const [loading, setLoading] = useState(false);
   const toast = useGameToast();
+
+  if (!isWalletAdmin) return null;
 
   const handleUpdateApy = async () => {
     try {
