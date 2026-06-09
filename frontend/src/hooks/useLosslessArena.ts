@@ -99,16 +99,16 @@ export function useLosslessArena() {
   }, [refetchMyGladiator, refetchPlayers, refetchTotalStake, refetchPrize, refetchBalance]);
 
   // Actions
-  const enterArena = async () => {
+  const enterArena = async (customAmount?: string) => {
     if (!isConnected) return;
     try {
       setActiveAction("enter");
       setTxState("preparing");
       setTxError(null);
       
-      const entryFeeVal = entryFeeData as bigint || parseEther("10");
-      if (balanceData && balanceData.value < entryFeeVal) {
-        throw new Error(`Insufficient CELO balance. Required: ${formatEther(entryFeeVal)} CELO, Available: ${balanceData.formatted} CELO`);
+      const stakeVal = customAmount ? parseEther(customAmount) : (entryFeeData as bigint || parseEther("10"));
+      if (balanceData && balanceData.value < stakeVal) {
+        throw new Error(`Insufficient CELO balance. Required: ${formatEther(stakeVal)} CELO, Available: ${balanceData.formatted} CELO`);
       }
 
       // Simulate step (e.g. small delay for simulation standard look)
@@ -119,7 +119,7 @@ export function useLosslessArena() {
         address: CONTRACT_ADDRESS as `0x${string}`,
         abi: LOSSLESS_ARENA_ABI,
         functionName: "enterArena",
-        value: entryFeeVal,
+        value: stakeVal,
       });
 
       setTxHash(hash);
