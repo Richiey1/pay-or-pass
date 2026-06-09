@@ -30,6 +30,8 @@ export function useLosslessArena() {
     address: address,
   });
 
+  const formattedBalance = balanceData ? formatEther(balanceData.value) : "0.0";
+
   // Contract Reads
   const { data: totalStakeData, refetch: refetchTotalStake } = useReadContract({
     address: CONTRACT_ADDRESS as `0x${string}`,
@@ -108,7 +110,7 @@ export function useLosslessArena() {
       
       const stakeVal = customAmount ? parseEther(customAmount) : (entryFeeData as bigint || parseEther("10"));
       if (balanceData && balanceData.value < stakeVal) {
-        throw new Error(`Insufficient CELO balance. Required: ${formatEther(stakeVal)} CELO, Available: ${balanceData.formatted} CELO`);
+        throw new Error(`Insufficient CELO balance. Required: ${formatEther(stakeVal)} CELO, Available: ${formattedBalance} CELO`);
       }
 
       // Simulate step (e.g. small delay for simulation standard look)
@@ -211,6 +213,7 @@ export function useLosslessArena() {
     exitArena,
     triggerRefetch,
     balance: balanceData,
+    formattedBalance,
     txState,
     setTxState,
     txError,

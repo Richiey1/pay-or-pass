@@ -43,6 +43,7 @@ export default function LosslessArenaHome() {
     exitArena,
     triggerRefetch,
     balance,
+    formattedBalance,
     txState,
     setTxState,
     txError,
@@ -169,10 +170,10 @@ export default function LosslessArenaHome() {
                     <div className="space-y-3 w-full text-left">
                       <div className="flex justify-between items-center text-[10px] text-white/50 font-black uppercase tracking-wider">
                         <span>Stake Amount</span>
-                        {balance && (
+                        {formattedBalance && (
                           <span>
-                            Bal: {parseFloat(balance.formatted).toFixed(4)} CELO 
-                            <span className="text-red-400 font-mono"> (${(parseFloat(balance.formatted) * 0.62).toFixed(2)})</span>
+                            Bal: {parseFloat(formattedBalance).toFixed(4)} CELO 
+                            <span className="text-red-400 font-mono"> (${(parseFloat(formattedBalance) * 0.62).toFixed(2)})</span>
                           </span>
                         )}
                       </div>
@@ -192,8 +193,8 @@ export default function LosslessArenaHome() {
                         </div>
                         <button
                           onClick={() => {
-                            if (balance) {
-                              const maxStake = Math.max(0, parseFloat(balance.formatted) - 0.05);
+                            if (formattedBalance) {
+                              const maxStake = Math.max(0, parseFloat(formattedBalance) - 0.05);
                               setStakeAmount(maxStake.toFixed(4));
                             }
                           }}
@@ -209,7 +210,7 @@ export default function LosslessArenaHome() {
                         </div>
                       )}
 
-                      {balance && stakeAmount && parseFloat(stakeAmount) > parseFloat(balance.formatted) && (
+                      {formattedBalance && stakeAmount && parseFloat(stakeAmount) > parseFloat(formattedBalance) && (
                         <div className="text-center text-[9px] text-red-500 font-black uppercase tracking-wider">
                           ⚠️ Insufficient balance for stake
                         </div>
@@ -228,7 +229,7 @@ export default function LosslessArenaHome() {
                         !stakeAmount || 
                         isNaN(parseFloat(stakeAmount)) || 
                         parseFloat(stakeAmount) < parseFloat(entryFee) ||
-                        (balance ? parseFloat(stakeAmount) > parseFloat(balance.formatted) : false)
+                        (formattedBalance ? parseFloat(stakeAmount) > parseFloat(formattedBalance) : false)
                       }
                       className="w-full bg-red-600 hover:bg-red-500 text-white font-black p-4 rounded-2xl transition-all shadow-[0_0_30px_rgba(220,38,38,0.4)] flex items-center justify-center gap-2 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed text-xs"
                     >
