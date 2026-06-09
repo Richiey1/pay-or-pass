@@ -5,6 +5,7 @@ import { useDisconnect, useWaitForTransactionReceipt } from "wagmi";
 import { useAppKit } from "@reown/appkit/react";
 import AdminPanel from "@/components/AdminPanel";
 import { useLosslessArena } from "@/hooks/useLosslessArena";
+import { TransactionModal } from "@/components/ui/TransactionModal";
 import { 
   Swords, 
   Shield, 
@@ -283,6 +284,15 @@ export default function LosslessArenaHome() {
           </div>
         )}
       </main>
+
+      <TransactionModal
+        txState={txState}
+        txError={txError}
+        txHash={txHash}
+        activeAction={activeAction}
+        entryFee={entryFee}
+        onClose={() => setTxState("idle")}
+      />
     </div>
   );
 }
