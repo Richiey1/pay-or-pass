@@ -6,6 +6,7 @@ import { useAppKit } from "@reown/appkit/react";
 import AdminPanel from "@/components/AdminPanel";
 import { useLosslessArena } from "@/hooks/useLosslessArena";
 import { TransactionModal } from "@/components/ui/TransactionModal";
+import { useMiniPay } from "@/hooks/useMiniPay";
 import { 
   Swords, 
   Shield, 
@@ -23,6 +24,9 @@ export default function LosslessArenaHome() {
   const { disconnect } = useDisconnect();
   const { open } = useAppKit();
   const [stakeAmount, setStakeAmount] = useState("");
+  
+  // Auto-connect inside Celo MiniPay
+  useMiniPay();
   
   const {
     address,
