@@ -53,6 +53,7 @@ export default function LosslessArenaHome() {
     txError,
     txHash,
     activeAction,
+    isLoading,
   } = useLosslessArena();
 
   // Watch for transaction confirmations
@@ -131,22 +132,34 @@ export default function LosslessArenaHome() {
           <div className="space-y-12 py-6">
             {/* Global Stats HUD */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-white/5 border border-white/10 p-6 rounded-3xl backdrop-blur-md flex flex-col items-center justify-center text-center">
+              <div className="bg-white/5 border border-white/10 p-6 rounded-3xl backdrop-blur-md flex flex-col items-center justify-center text-center relative overflow-hidden">
                 <TrendingUp className="w-8 h-8 text-red-500 mb-2" />
                 <div className="text-sm font-black text-white/50 tracking-widest">GLOBAL PRIZE POOL</div>
-                <div className="text-4xl font-black text-red-500">{currentPrize} <span className="text-xl text-red-500/50">CELO</span></div>
+                {isLoading ? (
+                  <div className="h-10 w-32 bg-white/10 rounded animate-pulse my-1" />
+                ) : (
+                  <div className="text-4xl font-black text-red-500">{currentPrize} <span className="text-xl text-red-500/50">CELO</span></div>
+                )}
                 <div className="text-xs text-white/30 mt-1">Accruing at 8% APY</div>
               </div>
-              <div className="bg-white/5 border border-white/10 p-6 rounded-3xl backdrop-blur-md flex flex-col items-center justify-center text-center">
+              <div className="bg-white/5 border border-white/10 p-6 rounded-3xl backdrop-blur-md flex flex-col items-center justify-center text-center relative overflow-hidden">
                 <Shield className="w-8 h-8 text-orange-500 mb-2" />
                 <div className="text-sm font-black text-white/50 tracking-widest">TOTAL VALUE LOCKED</div>
-                <div className="text-4xl font-black text-white">{totalStake} <span className="text-xl text-white/50">CELO</span></div>
+                {isLoading ? (
+                  <div className="h-10 w-32 bg-white/10 rounded animate-pulse my-1" />
+                ) : (
+                  <div className="text-4xl font-black text-white">{totalStake} <span className="text-xl text-white/50">CELO</span></div>
+                )}
                 <div className="text-xs text-white/30 mt-1">100% Principal Safe</div>
               </div>
-              <div className="bg-white/5 border border-white/10 p-6 rounded-3xl backdrop-blur-md flex flex-col items-center justify-center text-center">
+              <div className="bg-white/5 border border-white/10 p-6 rounded-3xl backdrop-blur-md flex flex-col items-center justify-center text-center relative overflow-hidden">
                 <User className="w-8 h-8 text-yellow-500 mb-2" />
                 <div className="text-sm font-black text-white/50 tracking-widest">ACTIVE GLADIATORS</div>
-                <div className="text-4xl font-black text-white">{activePlayers.length}</div>
+                {isLoading ? (
+                  <div className="h-10 w-16 bg-white/10 rounded animate-pulse my-1" />
+                ) : (
+                  <div className="text-4xl font-black text-white">{activePlayers.length}</div>
+                )}
                 <div className="text-xs text-white/30 mt-1">Currently in combat</div>
               </div>
             </div>
@@ -160,7 +173,14 @@ export default function LosslessArenaHome() {
                 
                 <h2 className="text-2xl font-black italic tracking-widest mb-6">MY GLADIATOR</h2>
                 
-                {!isInArena ? (
+                {isLoading ? (
+                  <div className="space-y-5 w-full mt-4 animate-pulse">
+                    <div className="w-20 h-20 mx-auto rounded-full bg-white/10" />
+                    <div className="h-4 w-1/2 bg-white/10 rounded mx-auto" />
+                    <div className="h-10 w-full bg-white/5 border border-white/10 rounded-xl" />
+                    <div className="h-10 w-full bg-red-600/20 border border-red-600/30 rounded-2xl" />
+                  </div>
+                ) : !isInArena ? (
                   <div className="space-y-5 w-full mt-4">
                     <div className="w-20 h-20 mx-auto rounded-full border-4 border-white/10 bg-white/5 overflow-hidden relative flex items-center justify-center shadow-lg">
                       <img
@@ -281,7 +301,22 @@ export default function LosslessArenaHome() {
                 </h2>
                 
                 <div className="space-y-4">
-                  {activePlayers.length === 0 ? (
+                  {isLoading ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {Array.from({ length: 4 }).map((_, i) => (
+                        <div key={i} className="p-4 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between animate-pulse">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-white/10" />
+                            <div className="space-y-2">
+                              <div className="h-3 w-24 bg-white/10 rounded" />
+                              <div className="h-2.5 w-12 bg-white/5 rounded" />
+                            </div>
+                          </div>
+                          <div className="h-6 w-12 bg-white/10 rounded" />
+                        </div>
+                      ))}
+                    </div>
+                  ) : activePlayers.length === 0 ? (
                     <div className="text-white/40 italic py-10 text-center">The arena is empty. Be the first to enter.</div>
                   ) : activePlayers.length === 1 && address && activePlayers[0].toLowerCase() === address.toLowerCase() ? (
                     <div className="text-white/40 italic py-10 text-center">You are currently the only player in the arena. Waiting for opponents to enter...</div>
