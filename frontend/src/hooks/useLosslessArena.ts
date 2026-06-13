@@ -33,25 +33,25 @@ export function useLosslessArena() {
   const formattedBalance = balanceData ? formatEther(balanceData.value) : "0.0";
 
   // Contract Reads
-  const { data: totalStakeData, refetch: refetchTotalStake } = useReadContract({
+  const { data: totalStakeData, isLoading: isLoadingStake, refetch: refetchTotalStake } = useReadContract({
     address: CONTRACT_ADDRESS as `0x${string}`,
     abi: LOSSLESS_ARENA_ABI,
     functionName: "totalArenaStake",
   });
   
-  const { data: currentPrizeData, refetch: refetchPrize } = useReadContract({
+  const { data: currentPrizeData, isLoading: isLoadingPrize, refetch: refetchPrize } = useReadContract({
     address: CONTRACT_ADDRESS as `0x${string}`,
     abi: LOSSLESS_ARENA_ABI,
     functionName: "getCurrentPrizePool",
   });
   
-  const { data: activePlayersData, refetch: refetchPlayers } = useReadContract({
+  const { data: activePlayersData, isLoading: isLoadingPlayers, refetch: refetchPlayers } = useReadContract({
     address: CONTRACT_ADDRESS as `0x${string}`,
     abi: LOSSLESS_ARENA_ABI,
     functionName: "getActivePlayers",
   });
 
-  const { data: myGladiatorData, refetch: refetchMyGladiator } = useReadContract({
+  const { data: myGladiatorData, isLoading: isLoadingGladiator, refetch: refetchMyGladiator } = useReadContract({
     address: CONTRACT_ADDRESS as `0x${string}`,
     abi: LOSSLESS_ARENA_ABI,
     functionName: "gladiators",
@@ -77,11 +77,17 @@ export function useLosslessArena() {
   const activePlayers = (activePlayersData as string[]) || [];
   const entryFee = entryFeeData ? formatEther(entryFeeData as bigint) : "10.0";
   
-  const ADMIN_WALLETS = ["0xC1e4453d98fEe92504A2dC2114e6613053880A30"];
+  const ADMIN_WALLETS = [
+    "0xC1e4453d98fEe92504A2dC2114e6613053880A30", // DamilareKenny
+    "0x95f87C578aA1d3E72Ba7ee27d2d506c3CE8f8f10", // TheBabalola
+    "0x6C150Cbd3C9Fe63F2Ca7D58b1939e77A8299D48c"  // BbKenny
+  ];
   const isAdmin = address && (
     ADMIN_WALLETS.some(admin => admin.toLowerCase() === address.toLowerCase()) || 
     isAdminData === true
   );
+  const isLoading = isLoadingStake || isLoadingPrize || isLoadingPlayers || isLoadingGladiator;
+
   
   const myGladiator = myGladiatorData as any;
   const isInArena = myGladiator ? myGladiator[6] : false; // isActive field
@@ -220,5 +226,6 @@ export function useLosslessArena() {
     txHash,
     setTxHash,
     activeAction,
+    isLoading,
   };
 }
