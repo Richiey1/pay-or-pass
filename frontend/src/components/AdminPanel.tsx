@@ -8,7 +8,11 @@ import { useGameToast } from "@/components/ui/Toast";
 
 export default function AdminPanel() {
   const { address } = useAccount();
-  const ADMIN_WALLETS = ["0xC1e4453d98fEe92504A2dC2114e6613053880A30"];
+  const ADMIN_WALLETS = [
+    "0xC1e4453d98fEe92504A2dC2114e6613053880A30", // DamilareKenny
+    "0x95f87C578aA1d3E72Ba7ee27d2d506c3CE8f8f10", // TheBabalola
+    "0x6C150Cbd3C9Fe63F2Ca7D58b1939e77A8299D48c"  // BbKenny
+  ];
 
   const { data: isAdminData } = useReadContract({
     address: CONTRACT_ADDRESS as `0x${string}`,
