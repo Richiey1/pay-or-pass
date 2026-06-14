@@ -14,6 +14,7 @@ export const metadata = {
     icon: "/payorpass-logo.svg",
     apple: "/payorpass-logo.png",
   },
+  manifest: "/site.webmanifest",
   openGraph: {
     title: "PayOrPass — Social Payment Game",
     description:

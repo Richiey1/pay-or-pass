@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useAccount, useReadContract, useWriteContract, useBalance } from "wagmi";
 import { formatEther, parseEther } from "viem";
-import { LOSSLESS_ARENA_ABI, CONTRACT_ADDRESS } from "@/lib/constants/contracts";
+import { LOSSLESS_ARENA_ABI, CONTRACT_ADDRESS, FUNCTION_NAMES } from "@/lib/constants/contracts";
 
 export interface Gladiator {
   player: string;
@@ -36,38 +36,38 @@ export function useLosslessArena() {
   const { data: totalStakeData, isLoading: isLoadingStake, refetch: refetchTotalStake } = useReadContract({
     address: CONTRACT_ADDRESS as `0x${string}`,
     abi: LOSSLESS_ARENA_ABI,
-    functionName: "totalArenaStake",
+    functionName: FUNCTION_NAMES.TOTAL_ARENA_STAKE,
   });
   
   const { data: currentPrizeData, isLoading: isLoadingPrize, refetch: refetchPrize } = useReadContract({
     address: CONTRACT_ADDRESS as `0x${string}`,
     abi: LOSSLESS_ARENA_ABI,
-    functionName: "getCurrentPrizePool",
+    functionName: FUNCTION_NAMES.GET_CURRENT_PRIZE_POOL,
   });
   
   const { data: activePlayersData, isLoading: isLoadingPlayers, refetch: refetchPlayers } = useReadContract({
     address: CONTRACT_ADDRESS as `0x${string}`,
     abi: LOSSLESS_ARENA_ABI,
-    functionName: "getActivePlayers",
+    functionName: FUNCTION_NAMES.GET_ACTIVE_PLAYERS,
   });
 
   const { data: myGladiatorData, isLoading: isLoadingGladiator, refetch: refetchMyGladiator } = useReadContract({
     address: CONTRACT_ADDRESS as `0x${string}`,
     abi: LOSSLESS_ARENA_ABI,
-    functionName: "gladiators",
+    functionName: FUNCTION_NAMES.GLADIATORS,
     args: address ? [address] : undefined,
   });
 
   const { data: entryFeeData } = useReadContract({
     address: CONTRACT_ADDRESS as `0x${string}`,
     abi: LOSSLESS_ARENA_ABI,
-    functionName: "entryFee",
+    functionName: FUNCTION_NAMES.ENTRY_FEE,
   });
 
   const { data: isAdminData } = useReadContract({
     address: CONTRACT_ADDRESS as `0x${string}`,
     abi: LOSSLESS_ARENA_ABI,
-    functionName: "isAdmin",
+    functionName: FUNCTION_NAMES.IS_ADMIN,
     args: address ? [address] : undefined,
   });
 
@@ -126,7 +126,7 @@ export function useLosslessArena() {
       const hash = await writeContractAsync({
         address: CONTRACT_ADDRESS as `0x${string}`,
         abi: LOSSLESS_ARENA_ABI,
-        functionName: "enterArena",
+        functionName: FUNCTION_NAMES.ENTER_ARENA,
         value: stakeVal,
       });
 
@@ -153,7 +153,7 @@ export function useLosslessArena() {
       const hash = await writeContractAsync({
         address: CONTRACT_ADDRESS as `0x${string}`,
         abi: LOSSLESS_ARENA_ABI,
-        functionName: "fight",
+        functionName: FUNCTION_NAMES.FIGHT,
         args: [selectedOpponent as `0x${string}`],
       });
 
@@ -180,7 +180,7 @@ export function useLosslessArena() {
       const hash = await writeContractAsync({
         address: CONTRACT_ADDRESS as `0x${string}`,
         abi: LOSSLESS_ARENA_ABI,
-        functionName: "exitArena",
+        functionName: FUNCTION_NAMES.EXIT_ARENA,
       });
 
       setTxHash(hash);

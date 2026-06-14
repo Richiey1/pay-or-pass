@@ -1,6 +1,22 @@
 // Standardized Contract Constants for LosslessArena on Celo
 export const CONTRACT_ADDRESS = '0x9b932E9B16202760F4e3173B9Dbe060924857329'; // Newly deployed Celo Mainnet contract address
 
+export const FUNCTION_NAMES = {
+  ENTER_ARENA: "enterArena",
+  FIGHT: "fight",
+  EXIT_ARENA: "exitArena",
+  GLADIATORS: "gladiators",
+  TOTAL_ARENA_STAKE: "totalArenaStake",
+  APY_BASIS_POINTS: "apyBasisPoints",
+  ACCUMULATED_PRIZE_POOL: "accumulatedPrizePool",
+  GET_ACTIVE_PLAYERS: "getActivePlayers",
+  GET_CURRENT_PRIZE_POOL: "getCurrentPrizePool",
+  OWNER: "owner",
+  SET_APY_BASIS_POINTS: "setApyBasisPoints",
+  ENTRY_FEE: "entryFee",
+  IS_ADMIN: "isAdmin",
+} as const;
+
 export const LOSSLESS_ARENA_ABI = [
   "function enterArena() external payable",
   "function fight(address opponent) external",

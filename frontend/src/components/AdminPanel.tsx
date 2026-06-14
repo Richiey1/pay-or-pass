@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useAccount, useReadContract, useWriteContract } from "wagmi";
 import { ShieldCheck, Loader2, Save } from "lucide-react";
-import { CONTRACT_ADDRESS, LOSSLESS_ARENA_ABI } from "@/lib/constants/contracts";
+import { CONTRACT_ADDRESS, LOSSLESS_ARENA_ABI, FUNCTION_NAMES } from "@/lib/constants/contracts";
 import { useGameToast } from "@/components/ui/Toast";
 
 export default function AdminPanel() {
@@ -17,7 +17,7 @@ export default function AdminPanel() {
   const { data: isAdminData } = useReadContract({
     address: CONTRACT_ADDRESS as `0x${string}`,
     abi: LOSSLESS_ARENA_ABI,
-    functionName: "isAdmin",
+    functionName: FUNCTION_NAMES.IS_ADMIN,
     args: address ? [address] : undefined,
   });
 
@@ -31,7 +31,7 @@ export default function AdminPanel() {
   const { data: currentApy, refetch: refetchApy } = useReadContract({
     address: CONTRACT_ADDRESS as `0x${string}`,
     abi: LOSSLESS_ARENA_ABI,
-    functionName: "apyBasisPoints",
+    functionName: FUNCTION_NAMES.APY_BASIS_POINTS,
   });
 
   const { writeContractAsync } = useWriteContract();
@@ -47,7 +47,7 @@ export default function AdminPanel() {
       await writeContractAsync({
         address: CONTRACT_ADDRESS as `0x${string}`,
         abi: LOSSLESS_ARENA_ABI,
-        functionName: "setApyBasisPoints",
+        functionName: FUNCTION_NAMES.SET_APY_BASIS_POINTS,
         args: [BigInt(apyValue)],
       });
       toast.showToast("Yield Rate successfully updated!", "success");
