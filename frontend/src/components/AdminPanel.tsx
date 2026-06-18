@@ -45,7 +45,7 @@ export default function AdminPanel() {
   const { data: currentCooldown, refetch: refetchCooldown } = useReadContract({
     address: CONTRACT_ADDRESS as `0x${string}`,
     abi: LOSSLESS_ARENA_ABI,
-    functionName: "fightCooldown",
+    functionName: FUNCTION_NAMES.FIGHT_COOLDOWN,
   });
 
   const { writeContractAsync } = useWriteContract();

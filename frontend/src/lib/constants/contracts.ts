@@ -19,6 +19,7 @@ export const FUNCTION_NAMES = {
   IS_ADMIN: "isAdmin",
   SET_ENTRY_FEE: "setEntryFee",
   SET_FIGHT_COOLDOWN: "setFightCooldown",
+  FIGHT_COOLDOWN: "fightCooldown",
 } as const;
 
 export const LOSSLESS_ARENA_ABI = parseAbi([
@@ -36,5 +37,6 @@ export const LOSSLESS_ARENA_ABI = parseAbi([
   "function setEntryFee(uint256 newFee) external",
   "function setFightCooldown(uint256 newCooldown) external",
   "function entryFee() view returns (uint256)",
+  "function fightCooldown() view returns (uint256)",
   "function isAdmin(address) view returns (bool)"
 ]);
