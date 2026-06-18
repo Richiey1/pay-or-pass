@@ -192,13 +192,7 @@ export function useLosslessArena() {
     }
   };
 
-  // Live polling for prize pool
-  useEffect(() => {
-    const interval = setInterval(() => {
-      refetchPrize();
-    }, 10000);
-    return () => clearInterval(interval);
-  }, [refetchPrize]);
+  // User must manually trigger refetch from the UI to avoid annoying page reloads
 
   return {
     address,

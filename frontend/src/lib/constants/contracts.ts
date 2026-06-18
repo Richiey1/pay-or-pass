@@ -1,3 +1,5 @@
+import { parseAbi } from 'viem';
+
 // Standardized Contract Constants for LosslessArena on Celo
 export const CONTRACT_ADDRESS = '0x9b932E9B16202760F4e3173B9Dbe060924857329'; // Newly deployed Celo Mainnet contract address
 
@@ -15,9 +17,11 @@ export const FUNCTION_NAMES = {
   SET_APY_BASIS_POINTS: "setApyBasisPoints",
   ENTRY_FEE: "entryFee",
   IS_ADMIN: "isAdmin",
+  SET_ENTRY_FEE: "setEntryFee",
+  SET_FIGHT_COOLDOWN: "setFightCooldown",
 } as const;
 
-export const LOSSLESS_ARENA_ABI = [
+export const LOSSLESS_ARENA_ABI = parseAbi([
   "function enterArena() external payable",
   "function fight(address opponent) external",
   "function exitArena() external",
@@ -29,6 +33,8 @@ export const LOSSLESS_ARENA_ABI = [
   "function getCurrentPrizePool() view returns (uint256)",
   "function owner() view returns (address)",
   "function setApyBasisPoints(uint256 newApy) external",
+  "function setEntryFee(uint256 newFee) external",
+  "function setFightCooldown(uint256 newCooldown) external",
   "function entryFee() view returns (uint256)",
   "function isAdmin(address) view returns (bool)"
-];
+]);

@@ -17,7 +17,8 @@ import {
   TrendingUp,
   Skull,
   LogOut,
-  Crosshair
+  Crosshair,
+  RefreshCw
 } from "lucide-react";
 
 export default function LosslessArenaHome() {
@@ -98,13 +99,22 @@ export default function LosslessArenaHome() {
         </div>
         
         {isConnected && (
-          <button
-            onClick={() => disconnect()}
-            className="flex items-center justify-center p-2 rounded-xl bg-white/5 hover:bg-red-500/10 border border-white/10 hover:border-red-500/30 text-white/70 hover:text-red-500 transition-all cursor-pointer shadow-lg"
-            title="Disconnect Wallet"
-          >
-            <LogOut className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => triggerRefetch()}
+              className="flex items-center justify-center p-2 rounded-xl bg-white/5 hover:bg-green-500/10 border border-white/10 hover:border-green-500/30 text-white/70 hover:text-green-500 transition-all cursor-pointer shadow-lg"
+              title="Refresh Data"
+            >
+              <RefreshCw className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
+            </button>
+            <button
+              onClick={() => disconnect()}
+              className="flex items-center justify-center p-2 rounded-xl bg-white/5 hover:bg-red-500/10 border border-white/10 hover:border-red-500/30 text-white/70 hover:text-red-500 transition-all cursor-pointer shadow-lg"
+              title="Disconnect Wallet"
+            >
+              <LogOut className="w-5 h-5" />
+            </button>
+          </div>
         )}
       </header>
 
@@ -189,7 +199,11 @@ export default function LosslessArenaHome() {
                         className="w-full h-full object-cover"
                       />
                     </div>
-                    <div className="text-white/50 text-xs">You are currently sitting in the stands.</div>
+                    <div className="text-white/50 text-xs font-mono">
+                      {address ? `${address.slice(0, 6)}...${address.slice(-4)}` : "You are currently sitting in the stands."}
+                    </div>
+                    
+                    <div className="text-white/40 text-[10px] italic -mt-2">You are currently sitting in the stands.</div>
                     
                     <div className="space-y-3 w-full text-left">
                       <div className="flex justify-between items-center text-[10px] text-white/50 font-black uppercase tracking-wider">
