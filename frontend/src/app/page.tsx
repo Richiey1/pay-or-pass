@@ -28,6 +28,7 @@ export default function LosslessArenaHome() {
   
   // Auto-connect inside Celo MiniPay
   useMiniPay();
+  const [currentPage, setCurrentPage] = useState(1);
   
   const {
     address,
@@ -175,7 +176,7 @@ export default function LosslessArenaHome() {
             </div>
 
             {/* Action Panel */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
               
               {/* My Gladiator Profile (4 cols) */}
               <div className="lg:col-span-4 bg-gradient-to-b from-red-900/20 to-black border border-red-500/30 rounded-3xl p-8 relative overflow-hidden flex flex-col items-center text-center">
@@ -206,12 +207,12 @@ export default function LosslessArenaHome() {
                     <div className="text-white/40 text-[10px] italic -mt-2">You are currently sitting in the stands.</div>
                     
                     <div className="space-y-3 w-full text-left">
-                      <div className="flex justify-between items-center text-[10px] text-white/50 font-black uppercase tracking-wider">
+                      <div className="flex justify-between items-center text-[10px] text-white/50 font-black uppercase tracking-wider mb-1">
                         <span>Stake Amount</span>
                         {formattedBalance && (
                           <span>
                             Bal: {parseFloat(formattedBalance).toFixed(4)} CELO 
-                            <span className="text-red-400 font-mono"> (${(parseFloat(formattedBalance) * 0.62).toFixed(2)})</span>
+                            <span className="text-red-400 font-mono ml-1">(${(parseFloat(formattedBalance) * 0.62).toFixed(2)})</span>
                           </span>
                         )}
                       </div>
@@ -243,19 +244,19 @@ export default function LosslessArenaHome() {
                       </div>
 
                       {stakeAmount && !isNaN(parseFloat(stakeAmount)) && (
-                        <div className="text-[10px] text-red-400 font-mono">
+                        <div className="text-[10px] text-red-400 font-mono mt-1">
                           Est. Value: ${(parseFloat(stakeAmount) * 0.62).toFixed(2)} USD
                         </div>
                       )}
 
                       {formattedBalance && stakeAmount && parseFloat(stakeAmount) > parseFloat(formattedBalance) && (
-                        <div className="text-center text-[9px] text-red-500 font-black uppercase tracking-wider">
+                        <div className="text-center text-[9px] text-red-500 font-black uppercase tracking-wider mt-2">
                           ⚠️ Insufficient balance for stake
                         </div>
                       )}
                       
                       {stakeAmount && parseFloat(stakeAmount) < parseFloat(entryFee) && (
-                        <div className="text-center text-[9px] text-red-500 font-black uppercase tracking-wider">
+                        <div className="text-center text-[9px] text-red-500 font-black uppercase tracking-wider mt-2">
                           ⚠️ Minimum Stake is {entryFee} CELO
                         </div>
                       )}
@@ -269,7 +270,7 @@ export default function LosslessArenaHome() {
                         parseFloat(stakeAmount) < parseFloat(entryFee) ||
                         (formattedBalance ? parseFloat(stakeAmount) > parseFloat(formattedBalance) : false)
                       }
-                      className="w-full bg-red-600 hover:bg-red-500 text-white font-black p-4 rounded-2xl transition-all shadow-[0_0_30px_rgba(220,38,38,0.4)] flex items-center justify-center gap-2 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed text-xs"
+                      className="w-full bg-red-600 hover:bg-red-500 text-white font-black p-4 rounded-2xl transition-all shadow-[0_0_30px_rgba(220,38,38,0.4)] flex items-center justify-center gap-2 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed text-xs mt-4"
                     >
                       STAKE TO ENTER <Swords className="w-5 h-5" />
                     </button>
@@ -335,50 +336,76 @@ export default function LosslessArenaHome() {
                   ) : activePlayers.length === 1 && address && activePlayers[0].toLowerCase() === address.toLowerCase() ? (
                     <div className="text-white/40 italic py-10 text-center">You are currently the only player in the arena. Waiting for opponents to enter...</div>
                   ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {activePlayers.map((playerAddr) => {
-                        if (playerAddr.toLowerCase() === address?.toLowerCase()) return null;
-                        const isSelected = selectedOpponent === playerAddr;
-                        return (
-                          <div 
-                            key={playerAddr}
-                            onClick={() => setSelectedOpponent(playerAddr)}
-                            className={`group cursor-pointer p-4 rounded-2xl border transition-all flex items-center justify-between ${
-                              isSelected 
-                                ? "bg-red-900/40 border-red-500 shadow-[0_0_20px_rgba(220,38,38,0.3)]" 
-                                : "bg-white/5 border-white/10 hover:border-red-500/30 hover:bg-red-950/10"
-                            }`}
-                          >
-                            <div className="flex items-center gap-3">
-                              <div className={`w-10 h-10 rounded-full overflow-hidden flex items-center justify-center border-2 transition-all ${isSelected ? 'border-red-500 bg-red-500/20 animate-pulse' : 'border-white/10 bg-white/5'}`}>
-                                <img
-                                  src={`https://api.dicebear.com/7.x/bottts/svg?seed=${playerAddr}`}
-                                  alt="Gladiator"
-                                  className="w-full h-full object-cover"
-                                />
+                    <>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {activePlayers
+                          .filter(playerAddr => playerAddr.toLowerCase() !== address?.toLowerCase())
+                          .slice((currentPage - 1) * 6, currentPage * 6)
+                          .map((playerAddr) => {
+                          const isSelected = selectedOpponent === playerAddr;
+                          return (
+                            <div 
+                              key={playerAddr}
+                              onClick={() => setSelectedOpponent(playerAddr)}
+                              className={`group cursor-pointer p-4 rounded-2xl border transition-all flex items-center justify-between ${
+                                isSelected 
+                                  ? "bg-red-900/40 border-red-500 shadow-[0_0_20px_rgba(220,38,38,0.3)]" 
+                                  : "bg-white/5 border-white/10 hover:border-red-500/30 hover:bg-red-950/10"
+                              }`}
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className={`w-10 h-10 rounded-full overflow-hidden flex items-center justify-center border-2 transition-all ${isSelected ? 'border-red-500 bg-red-500/20 animate-pulse' : 'border-white/10 bg-white/5'}`}>
+                                  <img
+                                    src={`https://api.dicebear.com/7.x/bottts/svg?seed=${playerAddr}`}
+                                    alt="Gladiator"
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
+                                <div>
+                                  <div className="font-mono text-sm font-bold text-white/80">
+                                    {playerAddr.slice(0,6)}...{playerAddr.slice(-4)}
+                                  </div>
+                                  <div className="text-[10px] text-white/40 font-black tracking-widest mt-1">GLADIATOR</div>
+                                </div>
                               </div>
                               <div>
-                                <div className="font-mono text-sm font-bold text-white/80">
-                                  {playerAddr.slice(0,6)}...{playerAddr.slice(-4)}
-                                </div>
-                                <div className="text-[10px] text-white/40 font-black tracking-widest mt-1">GLADIATOR</div>
+                                {isSelected ? (
+                                  <span className="text-[9px] font-black text-red-500 px-2.5 py-1 rounded bg-red-950/30 border border-red-500/50 uppercase tracking-widest flex items-center gap-1 animate-pulse">
+                                    <Crosshair className="w-3 h-3 text-red-500" /> LOCKED
+                                  </span>
+                                ) : (
+                                  <span className="text-[9px] font-black text-white/30 px-2.5 py-1 rounded bg-white/5 border border-white/5 uppercase tracking-widest group-hover:text-red-500 group-hover:border-red-500/30 transition-all">
+                                    SELECT
+                                  </span>
+                                )}
                               </div>
                             </div>
-                            <div>
-                              {isSelected ? (
-                                <span className="text-[9px] font-black text-red-500 px-2.5 py-1 rounded bg-red-950/30 border border-red-500/50 uppercase tracking-widest flex items-center gap-1 animate-pulse">
-                                  <Crosshair className="w-3 h-3 text-red-500" /> LOCKED
-                                </span>
-                              ) : (
-                                <span className="text-[9px] font-black text-white/30 px-2.5 py-1 rounded bg-white/5 border border-white/5 uppercase tracking-widest group-hover:text-red-500 group-hover:border-red-500/30 transition-all">
-                                  SELECT
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        )
-                      })}
-                    </div>
+                          )
+                        })}
+                      </div>
+                      
+                      {activePlayers.filter(p => p.toLowerCase() !== address?.toLowerCase()).length > 6 && (
+                        <div className="flex justify-center items-center gap-4 mt-6">
+                          <button 
+                            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                            disabled={currentPage === 1}
+                            className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-xs font-black uppercase text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                          >
+                            Prev
+                          </button>
+                          <span className="text-white/50 text-xs font-black">
+                            {currentPage} / {Math.ceil(activePlayers.filter(p => p.toLowerCase() !== address?.toLowerCase()).length / 6)}
+                          </span>
+                          <button 
+                            onClick={() => setCurrentPage(prev => Math.min(Math.ceil(activePlayers.filter(p => p.toLowerCase() !== address?.toLowerCase()).length / 6), prev + 1))}
+                            disabled={currentPage === Math.ceil(activePlayers.filter(p => p.toLowerCase() !== address?.toLowerCase()).length / 6)}
+                            className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-xs font-black uppercase text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                          >
+                            Next
+                          </button>
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
 
