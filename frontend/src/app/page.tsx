@@ -149,7 +149,7 @@ export default function LosslessArenaHome() {
                 {isLoading ? (
                   <div className="h-10 w-32 bg-white/10 rounded animate-pulse my-1" />
                 ) : (
-                  <div className="text-4xl font-black text-red-500">{currentPrize} <span className="text-xl text-red-500/50">CELO</span></div>
+                  <div className="text-4xl font-black text-red-500">{parseFloat(currentPrize).toFixed(4)} <span className="text-xl text-red-500/50">CELO</span></div>
                 )}
                 <div className="text-xs text-white/30 mt-1">Accruing at 8% APY</div>
               </div>
@@ -159,7 +159,7 @@ export default function LosslessArenaHome() {
                 {isLoading ? (
                   <div className="h-10 w-32 bg-white/10 rounded animate-pulse my-1" />
                 ) : (
-                  <div className="text-4xl font-black text-white">{totalStake} <span className="text-xl text-white/50">CELO</span></div>
+                  <div className="text-4xl font-black text-white">{parseFloat(totalStake).toFixed(4)} <span className="text-xl text-white/50">CELO</span></div>
                 )}
                 <div className="text-xs text-white/30 mt-1">100% Principal Safe</div>
               </div>

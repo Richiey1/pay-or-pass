@@ -74,8 +74,8 @@ export function useLosslessArena() {
   // Formatted/Derived states
   const totalStake = totalStakeData ? formatEther(totalStakeData as bigint) : "0.0";
   const currentPrize = currentPrizeData ? formatEther(currentPrizeData as bigint) : "0.000";
-  const activePlayers = (activePlayersData as string[]) || [];
-  const entryFee = entryFeeData ? formatEther(entryFeeData as bigint) : "10.0";
+  const activePlayers = Array.from(new Set(((activePlayersData as string[]) || []).map(a => a.toLowerCase())));
+  const entryFee = entryFeeData ? formatEther(entryFeeData as bigint) : "";
   
   const ADMIN_WALLETS = [
     "0xC1e4453d98fEe92504A2dC2114e6613053880A30", // DamilareKenny
