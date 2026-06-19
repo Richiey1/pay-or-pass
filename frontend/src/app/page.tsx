@@ -151,7 +151,7 @@ export default function LosslessArenaHome() {
                 ) : (
                   <div className="text-4xl font-black text-red-500">{parseFloat(currentPrize).toFixed(4)} <span className="text-xl text-red-500/50">CELO</span></div>
                 )}
-                <div className="text-xs text-white/30 mt-1">Accruing at 8% APY</div>
+                <div className="text-xs text-white/30 mt-1">Accruing at 8% APY (Est.)</div>
               </div>
               <div className="bg-white/5 border border-white/10 p-6 rounded-3xl backdrop-blur-md flex flex-col items-center justify-center text-center relative overflow-hidden">
                 <Shield className="w-8 h-8 text-orange-500 mb-2" />

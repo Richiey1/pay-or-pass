@@ -1,7 +1,7 @@
 import { parseAbi } from 'viem';
 
 // Standardized Contract Constants for LosslessArena on Celo
-export const CONTRACT_ADDRESS = '0x9b932E9B16202760F4e3173B9Dbe060924857329'; // Newly deployed Celo Mainnet contract address
+export const CONTRACT_ADDRESS = '0x90F24681A7b99cDa24B25E9f1bb2ce6E374786d7'; // Newly deployed Celo Mainnet contract address
 
 export const FUNCTION_NAMES = {
   ENTER_ARENA: "enterArena",
