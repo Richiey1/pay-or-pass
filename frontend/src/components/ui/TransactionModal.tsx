@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { Loader2, CheckCircle2, XCircle, ArrowRight, ShieldCheck, Cpu } from "lucide-react";
 import { TxState } from "@/hooks/useLosslessArena";
 
@@ -21,7 +22,13 @@ export function TransactionModal({
   usdRate = 0.62, // Default static rate if not fetched
   onClose,
 }: TransactionModalProps) {
-  if (txState === "idle") return null;
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (txState === "idle" || !mounted) return null;
 
   const getActionName = () => {
     switch (activeAction) {
@@ -54,8 +61,8 @@ export function TransactionModal({
   const isBroadcastDone = isPrepDone && txState !== "broadcasting";
   const isConfirmingDone = isBroadcastDone && txState !== "confirming";
 
-  return (
-    <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+  const modalContent = (
+    <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 99999 }}>
       <div className="bg-[#121214] border border-red-500/30 rounded-3xl p-6 md:p-8 max-w-md w-full space-y-6 shadow-[0_0_50px_rgba(220,38,38,0.2)] animate-in fade-in zoom-in duration-200">
         
         {/* Header */}
@@ -196,4 +203,6 @@ export function TransactionModal({
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 }

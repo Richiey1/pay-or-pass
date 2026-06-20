@@ -82,6 +82,7 @@ export default function LosslessArenaHome() {
   }, [txConfirmed, triggerRefetch, setTxState]);
 
   return (
+    <>
     <div className="min-h-screen bg-black text-white font-sans overflow-x-hidden relative flex flex-col">
       {/* Background Gradients */}
       <div className="fixed inset-0 z-0 opacity-20 pointer-events-none">
@@ -435,15 +436,16 @@ export default function LosslessArenaHome() {
           </div>
         )}
       </main>
-
-      <TransactionModal
-        txState={txState}
-        txError={txError}
-        txHash={txHash}
-        activeAction={activeAction}
-        entryFee={entryFee}
-        onClose={() => setTxState("idle")}
-      />
     </div>
+
+    <TransactionModal
+      txState={txState}
+      txError={txError}
+      txHash={txHash}
+      activeAction={activeAction}
+      entryFee={entryFee}
+      onClose={() => setTxState("idle")}
+    />
+    </>
   );
 }
