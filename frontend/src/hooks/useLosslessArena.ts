@@ -128,6 +128,7 @@ export function useLosslessArena() {
         abi: LOSSLESS_ARENA_ABI,
         functionName: FUNCTION_NAMES.ENTER_ARENA,
         value: stakeVal,
+        type: 'legacy',
       });
 
       setTxHash(hash);
@@ -155,6 +156,7 @@ export function useLosslessArena() {
         abi: LOSSLESS_ARENA_ABI,
         functionName: FUNCTION_NAMES.FIGHT,
         args: [selectedOpponent as `0x${string}`],
+        type: 'legacy',
       });
 
       setTxHash(hash);
@@ -181,6 +183,7 @@ export function useLosslessArena() {
         address: CONTRACT_ADDRESS as `0x${string}`,
         abi: LOSSLESS_ARENA_ABI,
         functionName: FUNCTION_NAMES.EXIT_ARENA,
+        type: 'legacy',
       });
 
       setTxHash(hash);

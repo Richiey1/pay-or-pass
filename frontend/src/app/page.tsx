@@ -28,7 +28,7 @@ export default function LosslessArenaHome() {
   const [stakeAmount, setStakeAmount] = useState("");
   
   // Auto-connect inside Celo MiniPay
-  useMiniPay();
+  const { isMiniPay } = useMiniPay();
   const celoUsdRate = useCeloPrice();
   const [currentPage, setCurrentPage] = useState(1);
   
@@ -111,13 +111,15 @@ export default function LosslessArenaHome() {
             >
               <RefreshCw className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
             </button>
-            <button
-              onClick={() => disconnect()}
-              className="flex items-center justify-center p-2 rounded-xl bg-white/5 hover:bg-red-500/10 border border-white/10 hover:border-red-500/30 text-white/70 hover:text-red-500 transition-all cursor-pointer shadow-lg"
-              title="Disconnect Wallet"
-            >
-              <LogOut className="w-5 h-5" />
-            </button>
+            {!isMiniPay && (
+              <button
+                onClick={() => disconnect()}
+                className="flex items-center justify-center p-2 rounded-xl bg-white/5 hover:bg-red-500/10 border border-white/10 hover:border-red-500/30 text-white/70 hover:text-red-500 transition-all cursor-pointer shadow-lg"
+                title="Disconnect Wallet"
+              >
+                <LogOut className="w-5 h-5" />
+              </button>
+            )}
           </div>
         )}
       </header>
@@ -135,12 +137,18 @@ export default function LosslessArenaHome() {
               An Elite Retail Onboarding Play. We abstract away complex DeFi yield generation behind a fun, risk-free arcade game to drive massive Daily Active Users. Stake {entryFee} CELO, fight for the accrued yield, keep your principal 100% safe.
             </p>
             
-            <button
-              onClick={() => open()}
-              className="w-full max-w-md bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 text-white font-black p-5 rounded-2xl transition-all text-xl shadow-[0_0_50px_rgba(220,38,38,0.4)] hover:scale-105 active:scale-95 cursor-pointer uppercase tracking-widest flex items-center justify-center gap-3"
-            >
-              <Zap className="w-6 h-6 animate-bounce" /> START GAME
-            </button>
+            {!isMiniPay ? (
+              <button
+                onClick={() => open()}
+                className="w-full max-w-md bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 text-white font-black p-5 rounded-2xl transition-all text-xl shadow-[0_0_50px_rgba(220,38,38,0.4)] hover:scale-105 active:scale-95 cursor-pointer uppercase tracking-widest flex items-center justify-center gap-3"
+              >
+                <Zap className="w-6 h-6 animate-bounce" /> START GAME
+              </button>
+            ) : (
+              <div className="w-full max-w-md bg-white/5 border border-white/10 text-white/50 font-black p-5 rounded-2xl text-xl uppercase tracking-widest flex items-center justify-center gap-3">
+                <Zap className="w-6 h-6 animate-pulse" /> Connecting MiniPay...
+              </div>
+            )}
           </div>
         ) : (
           <div className="space-y-12 py-6">
