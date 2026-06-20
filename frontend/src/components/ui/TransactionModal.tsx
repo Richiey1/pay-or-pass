@@ -55,7 +55,7 @@ export function TransactionModal({
   const isConfirmingDone = isBroadcastDone && txState !== "confirming";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+    <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
       <div className="bg-[#121214] border border-red-500/30 rounded-3xl p-6 md:p-8 max-w-md w-full space-y-6 shadow-[0_0_50px_rgba(220,38,38,0.2)] animate-in fade-in zoom-in duration-200">
         
         {/* Header */}
