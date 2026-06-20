@@ -23,7 +23,7 @@ export const OpponentHUDModal: React.FC<OpponentHUDModalProps> = ({
     address: CONTRACT_ADDRESS as `0x${string}`,
     abi: LOSSLESS_ARENA_ABI,
     functionName: FUNCTION_NAMES.GLADIATORS,
-    args: opponentAddress ? [opponentAddress] : undefined,
+    args: opponentAddress ? [opponentAddress as `0x${string}`] : undefined,
     query: {
       enabled: !!opponentAddress && isOpen,
     }
