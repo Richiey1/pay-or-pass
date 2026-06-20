@@ -6,6 +6,7 @@ import { useAppKit } from "@reown/appkit/react";
 import AdminPanel from "@/components/AdminPanel";
 import { useLosslessArena } from "@/hooks/useLosslessArena";
 import { TransactionModal } from "@/components/ui/TransactionModal";
+import { GameGuideModal } from "@/components/ui/GameGuideModal";
 import { useMiniPay } from "@/hooks/useMiniPay";
 import { useCeloPrice } from "@/hooks/useCeloPrice";
 import { 
@@ -21,11 +22,22 @@ import {
   Crosshair,
   RefreshCw,
   Copy,
-  Check
+  Check,
+  Info
 } from "lucide-react";
 
 export default function LosslessArenaHome() {
   const [copied, setCopied] = useState(false);
+  const [isGuideOpen, setIsGuideOpen] = useState(false);
+
+  // Check if first time user
+  useEffect(() => {
+    const hasSeenGuide = localStorage.getItem('hasSeenGuide_PayOrPass');
+    if (!hasSeenGuide) {
+      setIsGuideOpen(true);
+      localStorage.setItem('hasSeenGuide_PayOrPass', 'true');
+    }
+  }, []);
 
   const handleCopy = () => {
     if (address) {
@@ -116,6 +128,13 @@ export default function LosslessArenaHome() {
         {isConnected && (
           <div className="flex items-center gap-3">
             <button
+              onClick={() => setIsGuideOpen(true)}
+              className="flex items-center justify-center p-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/30 text-white/70 hover:text-white transition-all cursor-pointer shadow-lg"
+              title="How to Play"
+            >
+              <Info className="w-5 h-5" />
+            </button>
+            <button
               onClick={() => triggerRefetch()}
               className="flex items-center justify-center p-2 rounded-xl bg-white/5 hover:bg-green-500/10 border border-white/10 hover:border-green-500/30 text-white/70 hover:text-green-500 transition-all cursor-pointer shadow-lg"
               title="Refresh Data"
@@ -138,8 +157,17 @@ export default function LosslessArenaHome() {
       {/* Main Body */}
       <main className="relative z-10 flex-1 max-w-6xl mx-auto w-full p-4 sm:p-6 md:p-8 flex flex-col justify-center">
         {!isConnected ? (
-          <div className="flex flex-col items-center justify-center text-center py-12 px-4 max-w-2xl mx-auto space-y-8 my-auto">
+          <div className="flex flex-col items-center justify-center text-center py-12 px-4 max-w-2xl mx-auto space-y-8 my-auto relative">
             
+            {/* Guide Button for Disconnected Users */}
+            <button
+              onClick={() => setIsGuideOpen(true)}
+              className="absolute top-0 right-0 flex items-center justify-center p-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/30 text-white/70 hover:text-white transition-all cursor-pointer shadow-lg"
+              title="How to Play"
+            >
+              <Info className="w-5 h-5" />
+            </button>
+
             <h1 className="text-7xl md:text-9xl font-black tracking-tighter uppercase italic leading-[0.8] text-transparent bg-clip-text bg-gradient-to-br from-white to-red-600">
               PAYOR<br/>PASS
             </h1>
@@ -473,17 +501,20 @@ export default function LosslessArenaHome() {
           </div>
         )}
       </main>
-    </div>
-
-    <TransactionModal
-      txState={txState}
-      txError={txError}
-      txHash={txHash}
-      activeAction={activeAction}
-      entryFee={entryFee}
-      usdRate={celoUsdRate}
-      onClose={() => setTxState("idle")}
-    />
+      <TransactionModal
+        txState={txState}
+        txError={txError}
+        txHash={txHash}
+        activeAction={activeAction}
+        entryFee={entryFee}
+        usdRate={celoUsdRate}
+        onClose={() => setTxState("idle")}
+      />
+      <GameGuideModal
+        isOpen={isGuideOpen}
+        onClose={() => setIsGuideOpen(false)}
+        entryFee={entryFee || "0.50"}
+      />
     </>
   );
 }
