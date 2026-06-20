@@ -515,6 +515,7 @@ export default function LosslessArenaHome() {
         onClose={() => setIsGuideOpen(false)}
         entryFee={entryFee || "0.50"}
       />
+    </div>
     </>
   );
 }
