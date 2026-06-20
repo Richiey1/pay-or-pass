@@ -7,6 +7,7 @@ import AdminPanel from "@/components/AdminPanel";
 import { useLosslessArena } from "@/hooks/useLosslessArena";
 import { TransactionModal } from "@/components/ui/TransactionModal";
 import { useMiniPay } from "@/hooks/useMiniPay";
+import { useCeloPrice } from "@/hooks/useCeloPrice";
 import { 
   Swords, 
   Shield, 
@@ -28,6 +29,7 @@ export default function LosslessArenaHome() {
   
   // Auto-connect inside Celo MiniPay
   useMiniPay();
+  const celoUsdRate = useCeloPrice();
   const [currentPage, setCurrentPage] = useState(1);
   
   const {
@@ -213,7 +215,7 @@ export default function LosslessArenaHome() {
                         {formattedBalance && (
                           <span>
                             Bal: {parseFloat(formattedBalance).toFixed(4)} CELO 
-                            <span className="text-red-400 font-mono ml-1">(${(parseFloat(formattedBalance) * 0.62).toFixed(2)})</span>
+                            <span className="text-red-400 font-mono ml-1">(${(parseFloat(formattedBalance) * celoUsdRate).toFixed(2)})</span>
                           </span>
                         )}
                       </div>
@@ -246,7 +248,7 @@ export default function LosslessArenaHome() {
 
                       {stakeAmount && !isNaN(parseFloat(stakeAmount)) && (
                         <div className="text-[10px] text-red-400 font-mono mt-1">
-                          Est. Value: ${(parseFloat(stakeAmount) * 0.62).toFixed(2)} USD
+                          Est. Value: ${(parseFloat(stakeAmount || "0") * celoUsdRate).toFixed(2)} USD
                         </div>
                       )}
 
@@ -444,6 +446,7 @@ export default function LosslessArenaHome() {
       txHash={txHash}
       activeAction={activeAction}
       entryFee={entryFee}
+      usdRate={celoUsdRate}
       onClose={() => setTxState("idle")}
     />
     </>
