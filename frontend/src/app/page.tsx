@@ -19,10 +19,21 @@ import {
   Skull,
   LogOut,
   Crosshair,
-  RefreshCw
+  RefreshCw,
+  Copy,
+  Check
 } from "lucide-react";
 
 export default function LosslessArenaHome() {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = () => {
+    if (address) {
+      navigator.clipboard.writeText(address);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
   const { disconnect } = useDisconnect();
   const { open } = useAppKit();
   const [stakeAmount, setStakeAmount] = useState("");
@@ -153,36 +164,36 @@ export default function LosslessArenaHome() {
         ) : (
           <div className="space-y-12 py-6">
             {/* Global Stats HUD */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-white/5 border border-white/10 p-6 rounded-3xl backdrop-blur-md flex flex-col items-center justify-center text-center relative overflow-hidden">
-                <TrendingUp className="w-8 h-8 text-red-500 mb-2" />
-                <div className="text-sm font-black text-white/50 tracking-widest">GLOBAL PRIZE POOL</div>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-6">
+              <div className="bg-white/5 border border-white/10 p-4 md:p-6 rounded-2xl md:rounded-3xl backdrop-blur-md flex flex-col items-center justify-center text-center relative overflow-hidden">
+                <TrendingUp className="w-6 h-6 md:w-8 md:h-8 text-red-500 mb-2" />
+                <div className="text-[10px] md:text-sm font-black text-white/50 tracking-widest">GLOBAL PRIZE POOL</div>
                 {isLoading ? (
-                  <div className="h-10 w-32 bg-white/10 rounded animate-pulse my-1" />
+                  <div className="h-8 md:h-10 w-24 md:w-32 bg-white/10 rounded animate-pulse my-1" />
                 ) : (
-                  <div className="text-4xl font-black text-red-500">{parseFloat(currentPrize).toFixed(4)} <span className="text-xl text-red-500/50">CELO</span></div>
+                  <div className="text-xl md:text-4xl font-black text-red-500">{parseFloat(currentPrize).toFixed(4)} <span className="text-sm md:text-xl text-red-500/50">CELO</span></div>
                 )}
-                <div className="text-xs text-white/30 mt-1">Accruing at 8% APY (Est.)</div>
+                <div className="text-[9px] md:text-xs text-white/30 mt-1">Accruing at 8% APY (Est.)</div>
               </div>
-              <div className="bg-white/5 border border-white/10 p-6 rounded-3xl backdrop-blur-md flex flex-col items-center justify-center text-center relative overflow-hidden">
-                <Shield className="w-8 h-8 text-orange-500 mb-2" />
-                <div className="text-sm font-black text-white/50 tracking-widest">TOTAL VALUE LOCKED</div>
+              <div className="bg-white/5 border border-white/10 p-4 md:p-6 rounded-2xl md:rounded-3xl backdrop-blur-md flex flex-col items-center justify-center text-center relative overflow-hidden">
+                <Shield className="w-6 h-6 md:w-8 md:h-8 text-orange-500 mb-2" />
+                <div className="text-[10px] md:text-sm font-black text-white/50 tracking-widest">TOTAL VALUE LOCKED</div>
                 {isLoading ? (
-                  <div className="h-10 w-32 bg-white/10 rounded animate-pulse my-1" />
+                  <div className="h-8 md:h-10 w-24 md:w-32 bg-white/10 rounded animate-pulse my-1" />
                 ) : (
-                  <div className="text-4xl font-black text-white">{parseFloat(totalStake).toFixed(4)} <span className="text-xl text-white/50">CELO</span></div>
+                  <div className="text-xl md:text-4xl font-black text-white">{parseFloat(totalStake).toFixed(4)} <span className="text-sm md:text-xl text-white/50">CELO</span></div>
                 )}
-                <div className="text-xs text-white/30 mt-1">100% Principal Safe</div>
+                <div className="text-[9px] md:text-xs text-white/30 mt-1">100% Principal Safe</div>
               </div>
-              <div className="bg-white/5 border border-white/10 p-6 rounded-3xl backdrop-blur-md flex flex-col items-center justify-center text-center relative overflow-hidden">
-                <User className="w-8 h-8 text-yellow-500 mb-2" />
-                <div className="text-sm font-black text-white/50 tracking-widest">ACTIVE GLADIATORS</div>
+              <div className="col-span-2 md:col-span-1 bg-white/5 border border-white/10 p-4 md:p-6 rounded-2xl md:rounded-3xl backdrop-blur-md flex flex-col items-center justify-center text-center relative overflow-hidden">
+                <User className="w-6 h-6 md:w-8 md:h-8 text-yellow-500 mb-2" />
+                <div className="text-[10px] md:text-sm font-black text-white/50 tracking-widest">ACTIVE GLADIATORS</div>
                 {isLoading ? (
-                  <div className="h-10 w-16 bg-white/10 rounded animate-pulse my-1" />
+                  <div className="h-8 md:h-10 w-12 md:w-16 bg-white/10 rounded animate-pulse my-1" />
                 ) : (
-                  <div className="text-4xl font-black text-white">{activePlayers.length}</div>
+                  <div className="text-2xl md:text-4xl font-black text-white">{activePlayers.length}</div>
                 )}
-                <div className="text-xs text-white/30 mt-1">Currently in combat</div>
+                <div className="text-[9px] md:text-xs text-white/30 mt-1">Currently in combat</div>
               </div>
             </div>
 
@@ -211,8 +222,15 @@ export default function LosslessArenaHome() {
                         className="w-full h-full object-cover"
                       />
                     </div>
-                    <div className="text-white/50 text-xs font-mono">
-                      {address ? `${address.slice(0, 6)}...${address.slice(-4)}` : "You are currently sitting in the stands."}
+                    <div className="flex items-center gap-2 text-white/50 text-xs font-mono">
+                      {address ? (
+                        <>
+                          <span>{`${address.slice(0, 6)}...${address.slice(-4)}`}</span>
+                          <button onClick={handleCopy} className="hover:text-white transition-colors cursor-pointer" title="Copy address">
+                            {copied ? <Check className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3" />}
+                          </button>
+                        </>
+                      ) : "You are currently sitting in the stands."}
                     </div>
                     
                     <div className="text-white/40 text-[10px] italic -mt-2">You are currently sitting in the stands.</div>
@@ -295,6 +313,15 @@ export default function LosslessArenaHome() {
                         className="w-full h-full object-cover"
                       />
                       <div className="absolute -bottom-2 -right-2 bg-red-600 text-[10px] font-black px-2 py-1 rounded border border-black z-10">ACTIVE</div>
+                    </div>
+                    
+                    <div className="flex items-center justify-center gap-2 text-white/50 text-xs font-mono -mt-4 mb-2">
+                      <span>{address ? `${address.slice(0, 6)}...${address.slice(-4)}` : ""}</span>
+                      {address && (
+                        <button onClick={handleCopy} className="hover:text-white transition-colors cursor-pointer" title="Copy address">
+                          {copied ? <Check className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3" />}
+                        </button>
+                      )}
                     </div>
                     
                     <div className="grid grid-cols-2 gap-4">
