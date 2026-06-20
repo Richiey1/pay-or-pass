@@ -252,7 +252,7 @@ export default function LosslessArenaHome() {
                         className="w-full h-full object-cover"
                       />
                     </div>
-                    <div className="flex items-center gap-2 text-white/50 text-xs font-mono">
+                    <div className="flex items-center justify-center gap-2 text-white/50 text-xs font-mono">
                       {address ? (
                         <>
                           <span>{`${address.slice(0, 6)}...${address.slice(-4)}`}</span>
