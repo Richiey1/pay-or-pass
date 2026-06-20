@@ -86,7 +86,7 @@ export const GameGuideModal: React.FC<GameGuideModalProps> = ({ isOpen, onClose,
                 <Users className="w-4 h-4 text-yellow-500" /> View Active Gladiators
               </h3>
               <p className="text-xs text-white/60 leading-relaxed">
-                Once inside the arena, you can view the live HUD of all other players (Gladiators) who are currently staked in the game. It tracks their win/loss ratios and their total yield won.
+                Once inside the arena, you can view the live HUD (heads-up display) of all other players who are currently staked in the game. You can click on any gladiator in the roster to open their Target HUD and view their win/loss ratios and their total yield won.
               </p>
             </div>
           </div>

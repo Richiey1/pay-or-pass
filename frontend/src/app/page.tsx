@@ -7,6 +7,7 @@ import AdminPanel from "@/components/AdminPanel";
 import { useLosslessArena } from "@/hooks/useLosslessArena";
 import { TransactionModal } from "@/components/ui/TransactionModal";
 import { GameGuideModal } from "@/components/ui/GameGuideModal";
+import { OpponentHUDModal } from "@/components/ui/OpponentHUDModal";
 import { useMiniPay } from "@/hooks/useMiniPay";
 import { useCeloPrice } from "@/hooks/useCeloPrice";
 import { 
@@ -29,6 +30,7 @@ import {
 export default function LosslessArenaHome() {
   const [copied, setCopied] = useState(false);
   const [isGuideOpen, setIsGuideOpen] = useState(false);
+  const [viewingOpponent, setViewingOpponent] = useState<string | null>(null);
 
   // Check if first time user
   useEffect(() => {
@@ -412,7 +414,7 @@ export default function LosslessArenaHome() {
                           return (
                             <div 
                               key={playerAddr}
-                              onClick={() => setSelectedOpponent(playerAddr)}
+                              onClick={() => setViewingOpponent(playerAddr)}
                               className={`group cursor-pointer p-4 rounded-2xl border transition-all flex items-center justify-between ${
                                 isSelected 
                                   ? "bg-red-900/40 border-red-500 shadow-[0_0_20px_rgba(220,38,38,0.3)]" 
@@ -514,6 +516,13 @@ export default function LosslessArenaHome() {
         isOpen={isGuideOpen}
         onClose={() => setIsGuideOpen(false)}
         entryFee={entryFee || "0.50"}
+      />
+      <OpponentHUDModal
+        isOpen={!!viewingOpponent}
+        onClose={() => setViewingOpponent(null)}
+        opponentAddress={viewingOpponent}
+        onSelect={(addr) => setSelectedOpponent(addr)}
+        isInArena={isInArena}
       />
     </div>
     </>
