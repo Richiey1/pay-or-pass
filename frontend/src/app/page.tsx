@@ -303,8 +303,9 @@ export default function LosslessArenaHome() {
                       </div>
 
                       {stakeAmount && !isNaN(parseFloat(stakeAmount)) && (
-                        <div className="text-[10px] text-red-400 font-mono mt-1">
-                          Est. Value: ${(parseFloat(stakeAmount || "0") * celoUsdRate).toFixed(2)} USD
+                        <div className="flex justify-between items-center text-[10px] text-red-400 font-mono mt-1">
+                          <span>Est. Value: ${(parseFloat(stakeAmount || "0") * celoUsdRate).toFixed(2)} USD</span>
+                          <span>Raw: {(parseFloat(stakeAmount || "0") * 1e18).toLocaleString("fullwide", {useGrouping: false})} Wei</span>
                         </div>
                       )}
 
