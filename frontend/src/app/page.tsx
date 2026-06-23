@@ -276,42 +276,73 @@ export default function LosslessArenaHome() {
                         )}
                       </div>
 
-                      <div className="flex gap-2">
-                        <div className="relative flex-1">
-                          <input
-                            type="number"
-                            step="0.1"
-                            min={entryFee}
-                            value={stakeAmount}
-                            onChange={(e) => setStakeAmount(e.target.value)}
-                            placeholder={`Min ${entryFee}`}
-                            className="w-full bg-black border border-white/10 focus:border-red-500/50 rounded-xl px-4 py-3 text-xs font-black outline-none transition-all text-white pr-14"
-                          />
-                          <span className="absolute right-4 top-3 text-[10px] text-white/30 font-black">CELO</span>
+                      <div className="flex flex-col gap-2">
+                        <div className="flex gap-2">
+                          <div className="relative flex-1">
+                            <input
+                              type="number"
+                              step="0.01"
+                              min={entryFee}
+                              value={stakeAmount}
+                              onChange={(e) => setStakeAmount(e.target.value)}
+                              placeholder={`Min ${entryFee}`}
+                              className="w-full bg-black border border-white/10 focus:border-red-500/50 rounded-xl px-4 py-3 text-xs font-black outline-none transition-all text-white pr-14"
+                            />
+                            <span className="absolute right-4 top-3 text-[10px] text-white/30 font-black">CELO</span>
+                          </div>
+                          <div className="relative flex-1">
+                            <input
+                              type="number"
+                              step="0.01"
+                              value={stakeAmount && !isNaN(parseFloat(stakeAmount)) ? (parseFloat(stakeAmount) * celoUsdRate).toFixed(2) : ""}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                if (!val) {
+                                  setStakeAmount("");
+                                } else {
+                                  setStakeAmount((parseFloat(val) / celoUsdRate).toFixed(4));
+                                }
+                              }}
+                              placeholder="USD Value"
+                              className="w-full bg-black border border-white/10 focus:border-green-500/50 rounded-xl px-4 py-3 text-xs font-black outline-none transition-all text-white pr-14"
+                            />
+                            <span className="absolute right-4 top-3 text-[10px] text-green-500/50 font-black">USD</span>
+                          </div>
+                          <button
+                            onClick={() => {
+                              if (formattedBalance) {
+                                const maxStake = Math.max(0, parseFloat(formattedBalance) - 0.05);
+                                setStakeAmount(maxStake.toFixed(4));
+                              }
+                            }}
+                            className="px-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black uppercase text-white transition-all cursor-pointer"
+                          >
+                            Max
+                          </button>
                         </div>
-                        <button
-                          onClick={() => {
-                            if (formattedBalance) {
-                              const maxStake = Math.max(0, parseFloat(formattedBalance) - 0.05);
-                              setStakeAmount(maxStake.toFixed(4));
-                            }
-                          }}
-                          className="px-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black uppercase text-white transition-all cursor-pointer"
-                        >
-                          Max
-                        </button>
                       </div>
 
                       {stakeAmount && !isNaN(parseFloat(stakeAmount)) && (
-                        <div className="flex justify-between items-center text-[10px] text-red-400 font-mono mt-1">
-                          <span>Est. Value: ${(parseFloat(stakeAmount || "0") * celoUsdRate).toFixed(2)} USD</span>
+                        <div className="flex justify-end items-center text-[10px] text-red-400 font-mono mt-1">
                           <span>Raw: {(parseFloat(stakeAmount || "0") * 1e18).toLocaleString("fullwide", {useGrouping: false})} Wei</span>
                         </div>
                       )}
 
                       {formattedBalance && stakeAmount && parseFloat(stakeAmount) > parseFloat(formattedBalance) && (
-                        <div className="text-center text-[9px] text-red-500 font-black uppercase tracking-wider mt-2">
-                          ⚠️ Insufficient balance for stake
+                        <div className="flex flex-col items-center gap-2 mt-2">
+                          <div className="text-center text-[9px] text-red-500 font-black uppercase tracking-wider">
+                            ⚠️ Insufficient balance for stake
+                          </div>
+                          {isMiniPay && (
+                            <a 
+                              href="https://minipay.opera.com/add_cash"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="px-4 py-1.5 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-white font-black rounded-lg text-xs uppercase tracking-widest transition-all shadow-[0_0_15px_rgba(16,185,129,0.3)] cursor-pointer"
+                            >
+                              Add Cash
+                            </a>
+                          )}
                         </div>
                       )}
                       
