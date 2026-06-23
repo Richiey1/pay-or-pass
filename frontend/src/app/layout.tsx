@@ -12,14 +12,14 @@ export const metadata = {
   },
   icons: {
     icon: "/payorpass-logo.svg",
-    apple: "/payorpass-logo.png",
+    apple: "/payorpass-logo.svg",
   },
   manifest: "/site.webmanifest",
   openGraph: {
     title: "PayOrPass — Social Payment Game",
     description:
       "The social mini-game of pressure and strategy. Pay to end the chain or pass it with a 20% increase.",
-    images: [{ url: "/payorpass-logo.png" }],
+    images: [{ url: "/payorpass-logo.svg" }],
   },
 };
 
