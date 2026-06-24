@@ -69,8 +69,12 @@ export const GameGuideModal: React.FC<GameGuideModalProps> = ({ isOpen, onClose,
               <p className="text-xs text-white/60 leading-relaxed">
                 To join the GameFi experience, players must stake exactly <span className="text-white font-bold">{entryFee || "0.50"} CELO</span> into the secure vault. <span className="text-orange-400">This principal is never put at risk.</span>
               </p>
-              <div className="bg-white/5 p-3 rounded-xl border border-white/5 mt-2">
-                <p className="text-[11px] text-white/50"><strong className="text-white">Global Prize Pool:</strong> The UI tracks the massive combined TVL of all active gladiators and applies an 8% APY. The accumulated yield is the real prize pool that players fight for.</p>
+              <div className="bg-white/5 p-3 rounded-xl border border-white/5 mt-2 space-y-2">
+                <p className="text-[11px] text-white/50"><strong className="text-white">Dual Yield Strategies:</strong> You have the power to choose where your principal lives.</p>
+                <ul className="text-[11px] text-white/50 list-disc pl-4 space-y-1">
+                  <li><strong className="text-white">Simulated Yield:</strong> The UI tracks the combined TVL of all simulated gladiators and applies an 8% APY.</li>
+                  <li><strong className="text-white">Moola Market:</strong> Alternatively, route your deposit natively into Moola Market to earn real decentralized yield.</li>
+                </ul>
               </div>
             </div>
           </div>
@@ -105,7 +109,7 @@ export const GameGuideModal: React.FC<GameGuideModalProps> = ({ isOpen, onClose,
                 Select any opponent from the active gladiator roster. Clicking <strong>Initiate Combat</strong> engages a pseudo-random resolution.
               </p>
               <div className="bg-red-500/10 p-3 rounded-xl border border-red-500/20 mt-2">
-                <p className="text-[11px] text-red-200"><strong className="text-red-400">The Twist:</strong> The winner absorbs the ENTIRE accrued "Global Prize Pool" yield that has accumulated since the last fight. The loser simply records a loss on their ledger, but their <span className="text-white font-bold">{entryFee || "0.50"} CELO</span> principal remains 100% intact.</p>
+                <p className="text-[11px] text-red-200"><strong className="text-red-400">The Twist:</strong> The winner absorbs the ENTIRE accrued "Global Prize Pool" yield (both Simulated AND real Moola Market interest) that has accumulated since the last fight. The loser simply records a loss on their ledger, but their <span className="text-white font-bold">{entryFee || "0.50"} CELO</span> principal remains 100% intact.</p>
               </div>
             </div>
           </div>
