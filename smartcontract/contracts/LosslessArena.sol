@@ -23,6 +23,8 @@ interface IYieldToken {
  */
 contract LosslessArena is ReentrancyGuard {
     
+    enum YieldStrategy { SIMULATED, MOOLA }
+
     struct Gladiator {
         address player;
         uint256 principalStaked;
@@ -31,18 +33,26 @@ contract LosslessArena is ReentrancyGuard {
         uint256 losses;
         uint256 lastFightAt;
         bool isActive;
+        YieldStrategy strategy;
     }
 
     mapping(address => Gladiator) public gladiators;
     address[] public activePlayers;
     
     // Total Value Locked (Principal)
-    uint256 public totalArenaStake;
+    uint256 public totalSimulatedStake;
+    uint256 public totalMoolaStake;
     
-    // Yield configuration
+    // Moola Yield configuration
     address public yieldPool;
     address public mTokenAddress;
     address public constant CELO_ERC20 = 0x471EcE3750Da237f93B8E339c536989b8978a438; // Celo native ERC20 wrapper
+
+    // Simulated Yield configuration
+    uint256 public constant SECONDS_IN_YEAR = 31536000;
+    uint256 public apyBasisPoints = 800; // 8% APY
+    uint256 public lastYieldUpdate;
+    uint256 public accumulatedPrizePool;
     
     // Game Rules
     uint256 public entryFee = 10 ether; // 10 CELO
@@ -79,8 +89,18 @@ contract LosslessArena is ReentrancyGuard {
     }
 
     constructor() {
+        lastYieldUpdate = block.timestamp;
         isAdmin[msg.sender] = true;
         adminList.push(msg.sender);
+    }
+
+    function _updateSimulatedYield() internal {
+        uint256 elapsed = block.timestamp - lastYieldUpdate;
+        if (elapsed > 0 && totalSimulatedStake > 0) {
+            uint256 newYield = (totalSimulatedStake * apyBasisPoints * elapsed) / (SECONDS_IN_YEAR * 10000);
+            accumulatedPrizePool += newYield;
+        }
+        lastYieldUpdate = block.timestamp;
     }
 
     /**
@@ -111,9 +131,11 @@ contract LosslessArena is ReentrancyGuard {
     /**
      * @notice Stake CELO to enter the Lossless Arena.
      */
-    function enterArena() external payable nonReentrant {
+    function enterArena(YieldStrategy strategy) external payable nonReentrant {
         require(msg.value == entryFee, "Must stake exact entry fee to enter");
         
+        _updateSimulatedYield();
+
         if (!gladiators[msg.sender].isActive) {
             if (gladiators[msg.sender].principalStaked == 0) {
                 // New player
@@ -124,20 +146,29 @@ contract LosslessArena is ReentrancyGuard {
                     wins: 0,
                     losses: 0,
                     lastFightAt: 0,
-                    isActive: true
+                    isActive: true,
+                    strategy: strategy
                 });
                 activePlayers.push(msg.sender);
             } else {
                 // Returning player
                 gladiators[msg.sender].principalStaked += msg.value;
                 gladiators[msg.sender].isActive = true;
+                gladiators[msg.sender].strategy = strategy;
             }
         } else {
             gladiators[msg.sender].principalStaked += msg.value;
+            // Strategy remains the same if they just top up
+            strategy = gladiators[msg.sender].strategy;
         }
         
-        totalArenaStake += msg.value;
-        _depositToYield(msg.value); // Deposit into Moola Market!
+        if (strategy == YieldStrategy.MOOLA) {
+            totalMoolaStake += msg.value;
+            _depositToYield(msg.value);
+        } else {
+            totalSimulatedStake += msg.value;
+        }
+        
         emit ArenaEntered(msg.sender, msg.value);
     }
 
@@ -170,25 +201,41 @@ contract LosslessArena is ReentrancyGuard {
         gladiators[winner].wins++;
         gladiators[loser].losses++;
         
-        // Winner claims the entire accrued yield pool from Moola Market!
-        uint256 currentBalance = 0;
+        _updateSimulatedYield();
+
+        // Calculate Moola yield
+        uint256 currentMoolaBalance = 0;
         if (yieldPool != address(0) && mTokenAddress != address(0)) {
-            currentBalance = IYieldToken(mTokenAddress).balanceOf(address(this));
-        } else {
-            currentBalance = address(this).balance;
+            currentMoolaBalance = IYieldToken(mTokenAddress).balanceOf(address(this));
         }
 
-        uint256 prize = 0;
-        if (currentBalance > totalArenaStake) {
-            prize = currentBalance - totalArenaStake;
+        uint256 moolaPrize = 0;
+        if (currentMoolaBalance > totalMoolaStake) {
+            moolaPrize = currentMoolaBalance - totalMoolaStake;
+        }
+
+        // Calculate Simulated yield
+        uint256 simulatedPrize = accumulatedPrizePool;
+        accumulatedPrizePool = 0; // Reset simulated pool
+
+        uint256 totalPrize = moolaPrize + simulatedPrize;
+        
+        if (totalPrize > 0) {
+            gladiators[winner].totalYieldWon += totalPrize;
+            
+            // Withdraw Moola portion
+            if (moolaPrize > 0) {
+                _withdrawFromYield(moolaPrize, winner);
+            }
+            
+            // Transfer simulated portion
+            if (simulatedPrize > 0) {
+                (bool success, ) = winner.call{value: simulatedPrize}("");
+                require(success, "Simulated yield transfer failed");
+            }
         }
         
-        if (prize > 0) {
-            gladiators[winner].totalYieldWon += prize;
-            _withdrawFromYield(prize, winner);
-        }
-        
-        emit FightResolved(winner, loser, prize);
+        emit FightResolved(winner, loser, totalPrize);
     }
 
     /**
@@ -197,14 +244,22 @@ contract LosslessArena is ReentrancyGuard {
     function exitArena() external nonReentrant {
         require(gladiators[msg.sender].isActive, "You are not in the arena");
         
+        _updateSimulatedYield();
+
         uint256 amountToReturn = gladiators[msg.sender].principalStaked;
         require(amountToReturn > 0, "No principal to return");
         
         gladiators[msg.sender].principalStaked = 0;
         gladiators[msg.sender].isActive = false;
-        totalArenaStake -= amountToReturn;
         
-        _withdrawFromYield(amountToReturn, msg.sender);
+        if (gladiators[msg.sender].strategy == YieldStrategy.MOOLA) {
+            totalMoolaStake -= amountToReturn;
+            _withdrawFromYield(amountToReturn, msg.sender);
+        } else {
+            totalSimulatedStake -= amountToReturn;
+            (bool success, ) = msg.sender.call{value: amountToReturn}("");
+            require(success, "Principal return failed");
+        }
         
         emit ArenaExited(msg.sender, amountToReturn);
     }
@@ -227,17 +282,28 @@ contract LosslessArena is ReentrancyGuard {
     }
 
     function getCurrentPrizePool() external view returns (uint256) {
-        uint256 currentBalance = 0;
+        // Moola Yield
+        uint256 moolaPrize = 0;
         if (yieldPool != address(0) && mTokenAddress != address(0)) {
-            currentBalance = IYieldToken(mTokenAddress).balanceOf(address(this));
-        } else {
-            currentBalance = address(this).balance;
+            uint256 currentBalance = IYieldToken(mTokenAddress).balanceOf(address(this));
+            if (currentBalance > totalMoolaStake) {
+                moolaPrize = currentBalance - totalMoolaStake;
+            }
         }
 
-        if (currentBalance > totalArenaStake) {
-            return currentBalance - totalArenaStake;
+        // Simulated Yield
+        uint256 elapsed = block.timestamp - lastYieldUpdate;
+        uint256 currentSimulatedYield = 0;
+        if (elapsed > 0 && totalSimulatedStake > 0) {
+            currentSimulatedYield = (totalSimulatedStake * apyBasisPoints * elapsed) / (SECONDS_IN_YEAR * 10000);
         }
-        return 0;
+
+        return accumulatedPrizePool + currentSimulatedYield + moolaPrize;
+    }
+    
+    function setApyBasisPoints(uint256 newApy) external onlyAdmin {
+        _updateSimulatedYield();
+        apyBasisPoints = newApy;
     }
     
     function setEntryFee(uint256 _entryFee) external onlyAdmin {
@@ -302,5 +368,7 @@ contract LosslessArena is ReentrancyGuard {
         }
     }
     
-    receive() external payable {}
+    receive() external payable {
+        accumulatedPrizePool += msg.value;
+    }
 }
