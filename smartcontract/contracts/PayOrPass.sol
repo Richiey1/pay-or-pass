@@ -15,13 +15,13 @@ interface IYieldToken {
 }
 
 /**
- * @title LosslessArena
+ * @title PayOrPass
  * @notice Elite GameFi Primitive on Celo.
  * A competitive arcade fighting game where avatars battle to win the accrued DeFi yield
  * of the entire arena's staked pool, while every player's principal remains 100% safe.
  * Now natively integrated with Moola Market for real Celo yield.
  */
-contract LosslessArena is ReentrancyGuard {
+contract PayOrPass is ReentrancyGuard {
     
     enum YieldStrategy { SIMULATED, MOOLA }
 
@@ -34,6 +34,7 @@ contract LosslessArena is ReentrancyGuard {
         uint256 lastFightAt;
         bool isActive;
         YieldStrategy strategy;
+        address stakeToken;
     }
 
     mapping(address => Gladiator) public gladiators;
@@ -42,20 +43,28 @@ contract LosslessArena is ReentrancyGuard {
     // Total Value Locked (Principal)
     uint256 public totalSimulatedStake;
     uint256 public totalMoolaStake;
+    uint256 public totalSimulatedStakeCUSD;
+    uint256 public totalMoolaStakeCUSD;
     
     // Moola Yield configuration
     address public yieldPool;
     address public mTokenAddress;
+    address public yieldPoolCUSD;
+    address public mTokenAddressCUSD;
+
     address public constant CELO_ERC20 = 0x471EcE3750Da237f93B8E339c536989b8978a438; // Celo native ERC20 wrapper
+    address public constant CUSD_ERC20 = 0x765DE816845861e75A25fCA122bb6898B8B1282a; // cUSD on Celo mainnet
 
     // Simulated Yield configuration
     uint256 public constant SECONDS_IN_YEAR = 31536000;
     uint256 public apyBasisPoints = 800; // 8% APY
     uint256 public lastYieldUpdate;
     uint256 public accumulatedPrizePool;
+    uint256 public accumulatedPrizePoolCUSD;
     
     // Game Rules
     uint256 public entryFee = 10 ether; // 10 CELO
+    uint256 public entryFeeCUSD = 5 ether; // 5 cUSD
     uint256 public fightCooldown = 1 minutes;
     
     // Admin Role Flexibility (70% Threshold)
@@ -96,15 +105,21 @@ contract LosslessArena is ReentrancyGuard {
 
     function _updateSimulatedYield() internal {
         uint256 elapsed = block.timestamp - lastYieldUpdate;
-        if (elapsed > 0 && totalSimulatedStake > 0) {
-            uint256 newYield = (totalSimulatedStake * apyBasisPoints * elapsed) / (SECONDS_IN_YEAR * 10000);
-            accumulatedPrizePool += newYield;
+        if (elapsed > 0) {
+            if (totalSimulatedStake > 0) {
+                uint256 newYield = (totalSimulatedStake * apyBasisPoints * elapsed) / (SECONDS_IN_YEAR * 10000);
+                accumulatedPrizePool += newYield;
+            }
+            if (totalSimulatedStakeCUSD > 0) {
+                uint256 newYieldCUSD = (totalSimulatedStakeCUSD * apyBasisPoints * elapsed) / (SECONDS_IN_YEAR * 10000);
+                accumulatedPrizePoolCUSD += newYieldCUSD;
+            }
         }
         lastYieldUpdate = block.timestamp;
     }
 
     /**
-     * @notice Set Moola Market Yield parameters
+     * @notice Set Moola Market Yield parameters for CELO
      */
     function setYieldConfig(address _yieldPool, address _mToken) external onlyAdmin {
         yieldPool = _yieldPool;
@@ -112,27 +127,58 @@ contract LosslessArena is ReentrancyGuard {
         emit YieldConfigured(_yieldPool, _mToken);
     }
 
-    function _depositToYield(uint256 amount) internal {
-        if (yieldPool != address(0)) {
+    /**
+     * @notice Set Moola Market Yield parameters for cUSD
+     */
+    function setYieldConfigCUSD(address _yieldPoolCUSD, address _mTokenCUSD) external onlyAdmin {
+        yieldPoolCUSD = _yieldPoolCUSD;
+        mTokenAddressCUSD = _mTokenCUSD;
+        emit YieldConfigured(_yieldPoolCUSD, _mTokenCUSD);
+    }
+
+    function _depositToYield(uint256 amount, address token) internal {
+        if (token == CELO_ERC20 && yieldPool != address(0)) {
             IERC20(CELO_ERC20).approve(yieldPool, amount);
             IYieldProtocol(yieldPool).deposit(CELO_ERC20, amount, address(this), 0);
+        } else if (token == CUSD_ERC20 && yieldPoolCUSD != address(0)) {
+            IERC20(CUSD_ERC20).approve(yieldPoolCUSD, amount);
+            IYieldProtocol(yieldPoolCUSD).deposit(CUSD_ERC20, amount, address(this), 0);
         }
     }
 
-    function _withdrawFromYield(uint256 amount, address to) internal {
-        if (yieldPool != address(0)) {
-            IYieldProtocol(yieldPool).withdraw(CELO_ERC20, amount, to);
-        } else {
-            (bool success, ) = to.call{value: amount}("");
-            require(success, "Native transfer failed");
+    function _withdrawFromYield(uint256 amount, address to, address token) internal {
+        if (token == CELO_ERC20) {
+            if (yieldPool != address(0)) {
+                IYieldProtocol(yieldPool).withdraw(CELO_ERC20, amount, to);
+            } else {
+                (bool success, ) = to.call{value: amount}("");
+                require(success, "Native transfer failed");
+            }
+        } else if (token == CUSD_ERC20) {
+            if (yieldPoolCUSD != address(0)) {
+                IYieldProtocol(yieldPoolCUSD).withdraw(CUSD_ERC20, amount, to);
+            } else {
+                require(IERC20(CUSD_ERC20).transfer(to, amount), "cUSD transfer failed");
+            }
         }
     }
 
     /**
-     * @notice Stake CELO to enter the Lossless Arena.
+     * @notice Stake CELO or cUSD to enter the PayOrPass Arena.
      */
-    function enterArena(YieldStrategy strategy) external payable nonReentrant {
-        require(msg.value == entryFee, "Must stake exact entry fee to enter");
+    function enterArena(YieldStrategy strategy, address token) external payable nonReentrant {
+        uint256 amount;
+        if (token == address(0)) {
+            require(msg.value == entryFee, "Must stake exact entry fee to enter");
+            token = CELO_ERC20;
+            amount = msg.value;
+        } else if (token == CUSD_ERC20) {
+            require(msg.value == 0, "Do not send native CELO for cUSD entry");
+            amount = entryFeeCUSD;
+            require(IERC20(CUSD_ERC20).transferFrom(msg.sender, address(this), amount), "cUSD transfer failed");
+        } else {
+            revert("Unsupported token");
+        }
         
         _updateSimulatedYield();
 
@@ -141,35 +187,40 @@ contract LosslessArena is ReentrancyGuard {
                 // New player
                 gladiators[msg.sender] = Gladiator({
                     player: msg.sender,
-                    principalStaked: msg.value,
+                    principalStaked: amount,
                     totalYieldWon: 0,
                     wins: 0,
                     losses: 0,
                     lastFightAt: 0,
                     isActive: true,
-                    strategy: strategy
+                    strategy: strategy,
+                    stakeToken: token
                 });
                 activePlayers.push(msg.sender);
             } else {
                 // Returning player
-                gladiators[msg.sender].principalStaked += msg.value;
+                require(gladiators[msg.sender].stakeToken == token, "Must use same token");
+                gladiators[msg.sender].principalStaked += amount;
                 gladiators[msg.sender].isActive = true;
                 gladiators[msg.sender].strategy = strategy;
             }
         } else {
-            gladiators[msg.sender].principalStaked += msg.value;
+            require(gladiators[msg.sender].stakeToken == token, "Must use same token");
+            gladiators[msg.sender].principalStaked += amount;
             // Strategy remains the same if they just top up
             strategy = gladiators[msg.sender].strategy;
         }
         
         if (strategy == YieldStrategy.MOOLA) {
-            totalMoolaStake += msg.value;
-            _depositToYield(msg.value);
+            if (token == CELO_ERC20) totalMoolaStake += amount;
+            else totalMoolaStakeCUSD += amount;
+            _depositToYield(amount, token);
         } else {
-            totalSimulatedStake += msg.value;
+            if (token == CELO_ERC20) totalSimulatedStake += amount;
+            else totalSimulatedStakeCUSD += amount;
         }
         
-        emit ArenaEntered(msg.sender, msg.value);
+        emit ArenaEntered(msg.sender, amount);
     }
 
     /**
@@ -185,6 +236,7 @@ contract LosslessArena is ReentrancyGuard {
         gladiators[msg.sender].lastFightAt = block.timestamp;
         
         // Pseudo-random combat resolution (50/50)
+        uint256 totalArenaStake = totalSimulatedStake + totalMoolaStake + totalSimulatedStakeCUSD + totalMoolaStakeCUSD;
         uint256 random = uint256(keccak256(abi.encodePacked(block.timestamp, msg.sender, opponent, totalArenaStake))) % 100;
         
         address winner;
@@ -203,20 +255,31 @@ contract LosslessArena is ReentrancyGuard {
         
         _updateSimulatedYield();
 
-        // Calculate Moola yield
-        uint256 currentMoolaBalance = 0;
-        if (yieldPool != address(0) && mTokenAddress != address(0)) {
-            currentMoolaBalance = IYieldToken(mTokenAddress).balanceOf(address(this));
-        }
+        address winnerToken = gladiators[winner].stakeToken;
 
+        // Calculate Moola yield
         uint256 moolaPrize = 0;
-        if (currentMoolaBalance > totalMoolaStake) {
-            moolaPrize = currentMoolaBalance - totalMoolaStake;
+        if (winnerToken == CELO_ERC20) {
+            if (yieldPool != address(0) && mTokenAddress != address(0)) {
+                uint256 currentBalance = IYieldToken(mTokenAddress).balanceOf(address(this));
+                if (currentBalance > totalMoolaStake) moolaPrize = currentBalance - totalMoolaStake;
+            }
+        } else {
+            if (yieldPoolCUSD != address(0) && mTokenAddressCUSD != address(0)) {
+                uint256 currentBalance = IYieldToken(mTokenAddressCUSD).balanceOf(address(this));
+                if (currentBalance > totalMoolaStakeCUSD) moolaPrize = currentBalance - totalMoolaStakeCUSD;
+            }
         }
 
         // Calculate Simulated yield
-        uint256 simulatedPrize = accumulatedPrizePool;
-        accumulatedPrizePool = 0; // Reset simulated pool
+        uint256 simulatedPrize = 0;
+        if (winnerToken == CELO_ERC20) {
+            simulatedPrize = accumulatedPrizePool;
+            accumulatedPrizePool = 0;
+        } else {
+            simulatedPrize = accumulatedPrizePoolCUSD;
+            accumulatedPrizePoolCUSD = 0;
+        }
 
         uint256 totalPrize = moolaPrize + simulatedPrize;
         
@@ -225,13 +288,17 @@ contract LosslessArena is ReentrancyGuard {
             
             // Withdraw Moola portion
             if (moolaPrize > 0) {
-                _withdrawFromYield(moolaPrize, winner);
+                _withdrawFromYield(moolaPrize, winner, winnerToken);
             }
             
             // Transfer simulated portion
             if (simulatedPrize > 0) {
-                (bool success, ) = winner.call{value: simulatedPrize}("");
-                require(success, "Simulated yield transfer failed");
+                if (winnerToken == CELO_ERC20) {
+                    (bool success, ) = winner.call{value: simulatedPrize}("");
+                    require(success, "Simulated CELO yield transfer failed");
+                } else {
+                    require(IERC20(CUSD_ERC20).transfer(winner, simulatedPrize), "Simulated cUSD yield transfer failed");
+                }
             }
         }
         
@@ -247,18 +314,25 @@ contract LosslessArena is ReentrancyGuard {
         _updateSimulatedYield();
 
         uint256 amountToReturn = gladiators[msg.sender].principalStaked;
+        address token = gladiators[msg.sender].stakeToken;
         require(amountToReturn > 0, "No principal to return");
         
         gladiators[msg.sender].principalStaked = 0;
         gladiators[msg.sender].isActive = false;
         
         if (gladiators[msg.sender].strategy == YieldStrategy.MOOLA) {
-            totalMoolaStake -= amountToReturn;
-            _withdrawFromYield(amountToReturn, msg.sender);
+            if (token == CELO_ERC20) totalMoolaStake -= amountToReturn;
+            else totalMoolaStakeCUSD -= amountToReturn;
+            _withdrawFromYield(amountToReturn, msg.sender, token);
         } else {
-            totalSimulatedStake -= amountToReturn;
-            (bool success, ) = msg.sender.call{value: amountToReturn}("");
-            require(success, "Principal return failed");
+            if (token == CELO_ERC20) {
+                totalSimulatedStake -= amountToReturn;
+                (bool success, ) = msg.sender.call{value: amountToReturn}("");
+                require(success, "Principal return failed");
+            } else {
+                totalSimulatedStakeCUSD -= amountToReturn;
+                require(IERC20(CUSD_ERC20).transfer(msg.sender, amountToReturn), "Principal cUSD return failed");
+            }
         }
         
         emit ArenaExited(msg.sender, amountToReturn);
