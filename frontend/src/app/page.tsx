@@ -26,6 +26,7 @@ import {
   Check,
   Info
 } from "lucide-react";
+import { TOKENS, TokenSymbol } from "@/lib/constants/tokens";
 
 export default function LosslessArenaHome() {
   const [copied, setCopied] = useState(false);
@@ -56,6 +57,8 @@ export default function LosslessArenaHome() {
   const { isMiniPay } = useMiniPay();
   const celoUsdRate = useCeloPrice();
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedToken, setSelectedToken] = useState<TokenSymbol>('CELO');
+  const [selectedStrategy, setSelectedStrategy] = useState<number>(0); // 0 = Simulated, 1 = Moola
   
   const {
     address,
@@ -91,10 +94,10 @@ export default function LosslessArenaHome() {
   });
 
   useEffect(() => {
-    if (entryFee && !stakeAmount) {
-      setStakeAmount(entryFee);
+    if (!stakeAmount || stakeAmount === "10" || stakeAmount === "5") {
+      setStakeAmount(TOKENS[selectedToken].entryFee);
     }
-  }, [entryFee, stakeAmount]);
+  }, [selectedToken]);
 
   useEffect(() => {
     if (txConfirmed) {
@@ -267,16 +270,25 @@ export default function LosslessArenaHome() {
                     
                     <div className="space-y-3 w-full text-left">
                       <div className="flex justify-between items-center text-[10px] text-white/50 font-black uppercase tracking-wider mb-1">
-                        <span>Stake Amount</span>
+                        <span>Stake Amount & Token</span>
                         {formattedBalance && (
                           <span>
-                            Bal: {parseFloat(formattedBalance).toFixed(4)} CELO 
+                            CELO Bal: {parseFloat(formattedBalance).toFixed(4)} 
                             <span className="text-red-400 font-mono ml-1">(${(parseFloat(formattedBalance) * celoUsdRate).toFixed(2)})</span>
                           </span>
                         )}
                       </div>
 
                       <div className="flex gap-2">
+                        <select
+                          value={selectedToken}
+                          onChange={(e) => setSelectedToken(e.target.value as TokenSymbol)}
+                          className="w-1/3 bg-black border border-white/10 rounded-xl px-2 py-3 text-xs font-black outline-none text-white"
+                        >
+                          {Object.keys(TOKENS).map(key => (
+                            <option key={key} value={key}>{TOKENS[key as TokenSymbol].symbol}</option>
+                          ))}
+                        </select>
                         <div className="relative flex-1">
                           <input
                             type="number"
@@ -284,10 +296,10 @@ export default function LosslessArenaHome() {
                             min={entryFee}
                             value={stakeAmount}
                             onChange={(e) => setStakeAmount(e.target.value)}
-                            placeholder={`Min ${entryFee}`}
+                            placeholder={`Min ${TOKENS[selectedToken].entryFee}`}
                             className="w-full bg-black border border-white/10 focus:border-red-500/50 rounded-xl px-4 py-3 text-xs font-black outline-none transition-all text-white pr-14"
                           />
-                          <span className="absolute right-4 top-3 text-[10px] text-white/30 font-black">CELO</span>
+                          <span className="absolute right-4 top-3 text-[10px] text-white/30 font-black">{TOKENS[selectedToken].symbol}</span>
                         </div>
                         <button
                           onClick={() => {
@@ -327,20 +339,20 @@ export default function LosslessArenaHome() {
                         </div>
                       )}
                       
-                      {stakeAmount && parseFloat(stakeAmount) < parseFloat(entryFee) && (
+                      {stakeAmount && parseFloat(stakeAmount) < parseFloat(TOKENS[selectedToken].entryFee) && (
                         <div className="text-center text-[9px] text-red-500 font-black uppercase tracking-wider mt-2">
-                          ⚠️ Minimum Stake is {entryFee} CELO
+                          ⚠️ Minimum Stake is {TOKENS[selectedToken].entryFee} {TOKENS[selectedToken].symbol}
                         </div>
                       )}
                     </div>
 
                     <button 
-                      onClick={() => enterArena(stakeAmount)}
+                      onClick={() => enterArena(stakeAmount, TOKENS[selectedToken].address, selectedStrategy)}
                       disabled={
                         !stakeAmount || 
                         isNaN(parseFloat(stakeAmount)) || 
-                        parseFloat(stakeAmount) < parseFloat(entryFee) ||
-                        (formattedBalance ? parseFloat(stakeAmount) > parseFloat(formattedBalance) : false)
+                        parseFloat(stakeAmount) < parseFloat(TOKENS[selectedToken].entryFee) ||
+                        (selectedToken === 'CELO' && formattedBalance ? parseFloat(stakeAmount) > parseFloat(formattedBalance) : false)
                       }
                       className="w-full bg-red-600 hover:bg-red-500 text-white font-black p-4 rounded-2xl transition-all shadow-[0_0_30px_rgba(220,38,38,0.4)] flex items-center justify-center gap-2 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed text-xs mt-4"
                     >

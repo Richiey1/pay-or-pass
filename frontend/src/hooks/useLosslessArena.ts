@@ -1,7 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
 import { useAccount, useReadContract, useWriteContract, useBalance } from "wagmi";
 import { formatEther, parseEther } from "viem";
+import { readContract } from "wagmi/actions";
+import { useConfig } from "wagmi";
 import { LOSSLESS_ARENA_ABI, CONTRACT_ADDRESS, FUNCTION_NAMES } from "@/lib/constants/contracts";
+import { ERC20_ABI } from "@/lib/constants/erc20";
 
 export interface Gladiator {
   player: string;
@@ -17,6 +20,7 @@ export type TxState = "idle" | "preparing" | "broadcasting" | "confirming" | "co
 
 export function useLosslessArena() {
   const { address, isConnected } = useAccount();
+  const config = useConfig();
   const [selectedOpponent, setSelectedOpponent] = useState<string | null>(null);
   
   // Transaction lifecycle state
@@ -107,29 +111,51 @@ export function useLosslessArena() {
   }, [refetchMyGladiator, refetchPlayers, refetchTotalStake, refetchPrize, refetchBalance]);
 
   // Actions
-  const enterArena = async (customAmount?: string) => {
+  const enterArena = async (customAmount: string, token: string, strategy: number) => {
     if (!isConnected) return;
     try {
       setActiveAction("enter");
       setTxState("preparing");
       setTxError(null);
       
-      const stakeVal = customAmount ? parseEther(customAmount) : (entryFeeData as bigint || parseEther("10"));
-      if (balanceData && balanceData.value < stakeVal) {
+      const stakeVal = parseEther(customAmount || "10");
+      if (token === "0x0000000000000000000000000000000000000000" && balanceData && balanceData.value < stakeVal) {
         throw new Error(`Insufficient CELO balance. Required: ${formatEther(stakeVal)} CELO, Available: ${formattedBalance} CELO`);
       }
 
-      // Simulate step (e.g. small delay for simulation standard look)
-      await new Promise(r => setTimeout(r, 800));
+      // Check and Approve ERC20 if needed
+      if (token !== "0x0000000000000000000000000000000000000000" && address) {
+        setTxState("preparing");
+        const currentAllowance = await readContract(config, {
+          address: token as `0x${string}`,
+          abi: ERC20_ABI,
+          functionName: "allowance",
+          args: [address, CONTRACT_ADDRESS],
+        }) as bigint;
+
+        if (currentAllowance < stakeVal) {
+          setTxState("broadcasting");
+          const approveHash = await writeContractAsync({
+            address: token as `0x${string}`,
+            abi: ERC20_ABI,
+            functionName: "approve",
+            args: [CONTRACT_ADDRESS, stakeVal],
+            feeCurrency: "0x765DE816845861e75A25fCA122bb6898B8B1282a",
+          } as any);
+          // Simple wait for approve
+          await new Promise(r => setTimeout(r, 2000)); 
+        }
+      }
 
       setTxState("broadcasting");
       const hash = await writeContractAsync({
         address: CONTRACT_ADDRESS as `0x${string}`,
         abi: LOSSLESS_ARENA_ABI,
         functionName: FUNCTION_NAMES.ENTER_ARENA,
-        value: stakeVal,
-        type: 'legacy',
-      });
+        args: [strategy, token as `0x${string}`],
+        value: token === "0x0000000000000000000000000000000000000000" ? stakeVal : BigInt(0),
+        feeCurrency: "0x765DE816845861e75A25fCA122bb6898B8B1282a",
+      } as any);
 
       setTxHash(hash);
       setTxState("confirming");
@@ -156,8 +182,8 @@ export function useLosslessArena() {
         abi: LOSSLESS_ARENA_ABI,
         functionName: FUNCTION_NAMES.FIGHT,
         args: [selectedOpponent as `0x${string}`],
-        type: 'legacy',
-      });
+        feeCurrency: "0x765DE816845861e75A25fCA122bb6898B8B1282a",
+      } as any);
 
       setTxHash(hash);
       setTxState("confirming");
@@ -183,8 +209,8 @@ export function useLosslessArena() {
         address: CONTRACT_ADDRESS as `0x${string}`,
         abi: LOSSLESS_ARENA_ABI,
         functionName: FUNCTION_NAMES.EXIT_ARENA,
-        type: 'legacy',
-      });
+        feeCurrency: "0x765DE816845861e75A25fCA122bb6898B8B1282a",
+      } as any);
 
       setTxHash(hash);
       setTxState("confirming");

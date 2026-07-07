@@ -39,7 +39,7 @@ createAppKit({
 
 export function Web3Providers({ children }: { children: ReactNode }) {
   return (
-    <WagmiProvider config={wagmiAdapter.wagmiConfig}>
+    <WagmiProvider config={wagmiAdapter.wagmiConfig as any}>
       <QueryClientProvider client={queryClient}>
         {children}
       </QueryClientProvider>
