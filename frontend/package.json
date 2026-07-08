@@ -9,6 +9,8 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@celo/abis": "^17.0.4",
+    "@celo/contractkit": "^11.0.0",
     "@reown/appkit": "^1.8.19",
     "@reown/appkit-adapter-wagmi": "^1.8.19",
     "@tanstack/react-query": "^5.100.11",
