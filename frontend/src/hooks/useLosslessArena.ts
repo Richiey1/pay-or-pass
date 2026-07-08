@@ -5,6 +5,7 @@ import { readContract } from "wagmi/actions";
 import { useConfig } from "wagmi";
 import { LOSSLESS_ARENA_ABI, CONTRACT_ADDRESS, FUNCTION_NAMES } from "@/lib/constants/contracts";
 import { ERC20_ABI } from "@/lib/constants/erc20";
+import { useCeloFeeCurrency } from './useCeloFeeCurrency';
 
 export interface Gladiator {
   player: string;
@@ -22,6 +23,7 @@ export function useLosslessArena() {
   const { address, isConnected } = useAccount();
   const config = useConfig();
   const [selectedOpponent, setSelectedOpponent] = useState<string | null>(null);
+  const { feeCurrency } = useCeloFeeCurrency();
   
   // Transaction lifecycle state
   const [txState, setTxState] = useState<TxState>("idle");
@@ -140,7 +142,7 @@ export function useLosslessArena() {
             abi: ERC20_ABI,
             functionName: "approve",
             args: [CONTRACT_ADDRESS, stakeVal],
-            feeCurrency: "0x765DE816845861e75A25fCA122bb6898B8B1282a",
+            ...(feeCurrency ? { feeCurrency } : {}),
           } as any);
           // Simple wait for approve
           await new Promise(r => setTimeout(r, 2000)); 
@@ -154,7 +156,7 @@ export function useLosslessArena() {
         functionName: FUNCTION_NAMES.ENTER_ARENA,
         args: [strategy, token as `0x${string}`],
         value: token === "0x0000000000000000000000000000000000000000" ? stakeVal : BigInt(0),
-        feeCurrency: "0x765DE816845861e75A25fCA122bb6898B8B1282a",
+        ...(feeCurrency ? { feeCurrency } : {}),
       } as any);
 
       setTxHash(hash);
@@ -182,7 +184,7 @@ export function useLosslessArena() {
         abi: LOSSLESS_ARENA_ABI,
         functionName: FUNCTION_NAMES.FIGHT,
         args: [selectedOpponent as `0x${string}`],
-        feeCurrency: "0x765DE816845861e75A25fCA122bb6898B8B1282a",
+        ...(feeCurrency ? { feeCurrency } : {}),
       } as any);
 
       setTxHash(hash);
@@ -209,7 +211,7 @@ export function useLosslessArena() {
         address: CONTRACT_ADDRESS as `0x${string}`,
         abi: LOSSLESS_ARENA_ABI,
         functionName: FUNCTION_NAMES.EXIT_ARENA,
-        feeCurrency: "0x765DE816845861e75A25fCA122bb6898B8B1282a",
+        ...(feeCurrency ? { feeCurrency } : {}),
       } as any);
 
       setTxHash(hash);
