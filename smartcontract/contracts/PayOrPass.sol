@@ -2,7 +2,6 @@
 pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 interface IYieldProtocol {
@@ -16,8 +15,6 @@ interface IYieldToken {
 
 contract PayOrPass is ReentrancyGuard {
     
-    enum YieldStrategy { SIMULATED, MOOLA }
-
     struct Gladiator {
         address player;
         uint256 principalStaked;
@@ -26,7 +23,6 @@ contract PayOrPass is ReentrancyGuard {
         uint256 losses;
         uint256 lastFightAt;
         bool isActive;
-        YieldStrategy strategy;
         address stakeToken;
     }
 
@@ -53,24 +49,40 @@ contract PayOrPass is ReentrancyGuard {
     mapping(address => bool) public isAdmin;
     address[] public adminList;
 
-    struct AdminProposal {
-        address target;
-        bool isAdd;
-        uint256 approvals;
-        bool executed;
+    // --- PHASE 2 NEW STORAGE ---
+    mapping(address => uint256) public referralBuffExpiry; // user => expiry timestamp
+    uint256 public winnerBP = 7000;
+    uint256 public poolSeedBP = 1000;
+    uint256 public seasonalBP = 1000;
+    uint256 public protocolBP = 1000;
+
+    mapping(address => uint256) public seasonalFund; // token => amount
+    mapping(address => uint256) public protocolFund; // token => amount
+    
+    struct FightSession {
+        address player1;
+        address player2;
+        bytes32 commit1;
+        bytes32 commit2;
+        uint8 choice1; // 1: Attack, 2: Defend, 3: Invest
+        uint8 choice2;
+        uint256 startTime;
+        bool resolved;
+        address token;
     }
     
-    mapping(uint256 => mapping(address => bool)) public proposalApprovals;
-    uint256 public nextProposalId;
-    mapping(uint256 => AdminProposal) public proposals;
+    mapping(uint256 => FightSession) public fights;
+    uint256 public nextFightId = 1;
+    mapping(address => uint256) public currentFight; // player => fightId
 
     event ArenaEntered(address indexed player, uint256 amount);
     event ArenaExited(address indexed player, uint256 amount);
-    event FightResolved(address indexed winner, address indexed loser, uint256 yieldWon);
-    event AdminProposalCreated(uint256 indexed proposalId, address indexed target, bool isAdd);
-    event AdminProposalApproved(uint256 indexed proposalId, address indexed approver);
-    event AdminProposalExecuted(uint256 indexed proposalId, address indexed target, bool isAdd);
+    event FightInitiated(uint256 indexed fightId, address indexed p1, address indexed p2);
+    event FightResolved(uint256 indexed fightId, address indexed winner, address indexed loser, uint256 yieldWon);
+    event FightClash(uint256 indexed fightId, address indexed p1, address indexed p2);
     event YieldConfigured(address indexed pool, address indexed mToken, address indexed token);
+    event MegaYieldThreshold(uint256 amount);
+    event ReferralBuffClaimed(address indexed referrer, address indexed referee);
 
     modifier onlyAdmin() {
         require(isAdmin[msg.sender], "Not an admin");
@@ -132,6 +144,21 @@ contract PayOrPass is ReentrancyGuard {
         supportedTokens[token] = isSupported;
         entryFees[token] = fee;
     }
+    
+    function setDistributionBPs(uint256 _winner, uint256 _poolSeed, uint256 _seasonal, uint256 _protocol) external onlyAdmin {
+        require(_winner + _poolSeed + _seasonal + _protocol == 10000, "BPs must sum to 10000");
+        winnerBP = _winner;
+        poolSeedBP = _poolSeed;
+        seasonalBP = _seasonal;
+        protocolBP = _protocol;
+    }
+
+    function claimReferralBuff(address referee) external {
+        require(msg.sender != referee, "Cannot refer self");
+        referralBuffExpiry[msg.sender] = block.timestamp + 1 days;
+        referralBuffExpiry[referee] = block.timestamp + 1 days;
+        emit ReferralBuffClaimed(msg.sender, referee);
+    }
 
     function _depositToYield(uint256 amount, address token) internal {
         address pool = yieldPools[token];
@@ -155,7 +182,7 @@ contract PayOrPass is ReentrancyGuard {
         }
     }
 
-    function enterArena(YieldStrategy strategy, address token) external payable nonReentrant {
+    function enterArena(address token) external payable nonReentrant {
         uint256 amount;
         if (token == address(0)) {
             token = CELO_ERC20;
@@ -183,7 +210,6 @@ contract PayOrPass is ReentrancyGuard {
                     losses: 0,
                     lastFightAt: 0,
                     isActive: true,
-                    strategy: strategy,
                     stakeToken: token
                 });
                 activePlayers.push(msg.sender);
@@ -191,15 +217,14 @@ contract PayOrPass is ReentrancyGuard {
                 require(gladiators[msg.sender].stakeToken == token, "Must use same token");
                 gladiators[msg.sender].principalStaked += amount;
                 gladiators[msg.sender].isActive = true;
-                gladiators[msg.sender].strategy = strategy;
             }
         } else {
             require(gladiators[msg.sender].stakeToken == token, "Must use same token");
             gladiators[msg.sender].principalStaked += amount;
-            strategy = gladiators[msg.sender].strategy;
         }
         
-        if (strategy == YieldStrategy.MOOLA) {
+        // Auto-select strategy
+        if (yieldPools[token] != address(0)) {
             totalMoolaStakes[token] += amount;
             _depositToYield(amount, token);
         } else {
@@ -208,61 +233,220 @@ contract PayOrPass is ReentrancyGuard {
         
         emit ArenaEntered(msg.sender, amount);
     }
-
-    function fight(address opponent) external nonReentrant {
+    
+    function submitChoice(address opponent, bytes32 commitHash) external nonReentrant {
         require(gladiators[msg.sender].isActive, "You are not in the arena");
         require(gladiators[opponent].isActive, "Opponent not in the arena");
         require(msg.sender != opponent, "Cannot fight yourself");
-        require(block.timestamp >= gladiators[msg.sender].lastFightAt + fightCooldown, "Fight cooldown active");
         require(gladiators[msg.sender].stakeToken == gladiators[opponent].stakeToken, "Tokens must match");
+        require(currentFight[msg.sender] == 0, "Already in a fight");
+        require(currentFight[opponent] == 0, "Opponent already in a fight");
+        require(block.timestamp >= gladiators[msg.sender].lastFightAt + fightCooldown, "Cooldown");
+
+        uint256 fightId = nextFightId++;
+        fights[fightId] = FightSession({
+            player1: msg.sender,
+            player2: opponent,
+            commit1: commitHash,
+            commit2: bytes32(0),
+            choice1: 0,
+            choice2: 0,
+            startTime: block.timestamp,
+            resolved: false,
+            token: gladiators[msg.sender].stakeToken
+        });
         
-        gladiators[msg.sender].lastFightAt = block.timestamp;
+        currentFight[msg.sender] = fightId;
+        currentFight[opponent] = fightId;
         
-        uint256 random = uint256(keccak256(abi.encodePacked(block.timestamp, msg.sender, opponent))) % 100;
+        emit FightInitiated(fightId, msg.sender, opponent);
+    }
+    
+    function joinFight(uint256 fightId, bytes32 commitHash) external nonReentrant {
+        FightSession storage f = fights[fightId];
+        require(f.player2 == msg.sender, "Not your fight");
+        require(f.commit2 == bytes32(0), "Already committed");
+        require(!f.resolved, "Already resolved");
         
-        address winner = random >= 50 ? msg.sender : opponent;
-        address loser = random >= 50 ? opponent : msg.sender;
+        f.commit2 = commitHash;
+    }
+    
+    function revealChoice(uint256 fightId, uint8 choice, bytes32 salt) external nonReentrant {
+        FightSession storage f = fights[fightId];
+        require(!f.resolved, "Already resolved");
+        require(choice >= 1 && choice <= 3, "Invalid choice"); // 1: Attack, 2: Defend, 3: Invest
+        
+        if (msg.sender == f.player1) {
+            require(f.commit1 == keccak256(abi.encodePacked(choice, salt, msg.sender)), "Invalid commit");
+            f.choice1 = choice;
+        } else if (msg.sender == f.player2) {
+            require(f.commit2 == keccak256(abi.encodePacked(choice, salt, msg.sender)), "Invalid commit");
+            f.choice2 = choice;
+        } else {
+            revert("Not a participant");
+        }
+        
+        // Both revealed?
+        if (f.choice1 != 0 && f.choice2 != 0) {
+            _resolveFight(fightId);
+        }
+    }
+    
+    function timeoutFight(uint256 fightId) external nonReentrant {
+        FightSession storage f = fights[fightId];
+        require(!f.resolved, "Already resolved");
+        require(block.timestamp > f.startTime + 5 minutes, "Reveal window not closed");
+        
+        address winner = address(0);
+        address loser = address(0);
+        
+        if (f.choice1 != 0 && f.choice2 == 0) {
+            winner = f.player1;
+            loser = f.player2;
+        } else if (f.choice2 != 0 && f.choice1 == 0) {
+            winner = f.player2;
+            loser = f.player1;
+        } else {
+            // Both timed out, just clear it
+            f.resolved = true;
+            currentFight[f.player1] = 0;
+            currentFight[f.player2] = 0;
+            return;
+        }
+        
+        f.resolved = true;
+        currentFight[f.player1] = 0;
+        currentFight[f.player2] = 0;
         
         gladiators[winner].wins++;
         gladiators[loser].losses++;
+        gladiators[winner].lastFightAt = block.timestamp;
         
-        _updateSimulatedYield();
+        _distributeFight(winner, f.token);
+    }
 
-        address winnerToken = gladiators[winner].stakeToken;
+    function _resolveFight(uint256 fightId) internal {
+        FightSession storage f = fights[fightId];
+        f.resolved = true;
+        currentFight[f.player1] = 0;
+        currentFight[f.player2] = 0;
+        
+        gladiators[f.player1].lastFightAt = block.timestamp;
+        gladiators[f.player2].lastFightAt = block.timestamp;
 
-        uint256 moolaPrize = 0;
-        if (yieldPools[winnerToken] != address(0) && mTokens[winnerToken] != address(0)) {
-            uint256 currentBalance = IYieldToken(mTokens[winnerToken]).balanceOf(address(this));
-            if (currentBalance > totalMoolaStakes[winnerToken]) moolaPrize = currentBalance - totalMoolaStakes[winnerToken];
+        // Apply defense buff
+        uint8 p1DefBonus = (referralBuffExpiry[f.player1] > block.timestamp) ? 1 : 0;
+        uint8 p2DefBonus = (referralBuffExpiry[f.player2] > block.timestamp) ? 1 : 0;
+        
+        address winner = address(0);
+        address loser = address(0);
+        bool clash = false;
+
+        // 1: Attack, 2: Defend, 3: Invest
+        if (f.choice1 == 1) {
+            if (f.choice2 == 1) clash = true;
+            else if (f.choice2 == 2 && p2DefBonus == 0) {
+                // p1 attacks, p2 defends but no bonus - let's say defend blocks attack
+                // no winner
+                clash = true;
+            } else if (f.choice2 == 3) {
+                // attack beats invest
+                winner = f.player1;
+                loser = f.player2;
+            }
+        } else if (f.choice1 == 2) {
+            if (f.choice2 == 1 && p1DefBonus == 0) {
+                clash = true;
+            } else if (f.choice2 == 3) {
+                // defend vs invest = no effect, maybe invest wins?
+                winner = f.player2; // invest grows
+                loser = f.player1;
+            } else {
+                clash = true;
+            }
+        } else if (f.choice1 == 3) {
+            if (f.choice2 == 1) {
+                winner = f.player2;
+                loser = f.player1;
+            } else if (f.choice2 == 2) {
+                winner = f.player1;
+                loser = f.player2;
+            } else {
+                clash = true; // both invest, clean round
+            }
+        }
+        
+        if (clash) {
+            emit FightClash(fightId, f.player1, f.player2);
+            return;
         }
 
-        uint256 simulatedPrize = accumulatedPrizePools[winnerToken];
-        accumulatedPrizePools[winnerToken] = 0;
+        if (winner != address(0)) {
+            gladiators[winner].wins++;
+            gladiators[loser].losses++;
+            _distributeFight(winner, f.token);
+            emit FightResolved(fightId, winner, loser, 0); // Event can be updated with actual amount
+        }
+    }
+
+    function _distributeFight(address winner, address token) internal {
+        _updateSimulatedYield();
+
+        uint256 moolaPrize = 0;
+        if (yieldPools[token] != address(0) && mTokens[token] != address(0)) {
+            uint256 currentBalance = IYieldToken(mTokens[token]).balanceOf(address(this));
+            if (currentBalance > totalMoolaStakes[token]) {
+                moolaPrize = currentBalance - totalMoolaStakes[token];
+            }
+        }
+
+        uint256 simulatedPrize = accumulatedPrizePools[token];
+        accumulatedPrizePools[token] = 0;
 
         uint256 totalPrize = moolaPrize + simulatedPrize;
         
         if (totalPrize > 0) {
-            gladiators[winner].totalYieldWon += totalPrize;
+            // 70/10/10/10 Split
+            uint256 winnerAmount = (totalPrize * winnerBP) / 10000;
+            uint256 poolAmount = (totalPrize * poolSeedBP) / 10000;
+            uint256 seasonalAmount = (totalPrize * seasonalBP) / 10000;
+            uint256 protocolAmount = totalPrize - winnerAmount - poolAmount - seasonalAmount;
+
+            accumulatedPrizePools[token] += poolAmount; // Seed back
+            seasonalFund[token] += seasonalAmount;
+            protocolFund[token] += protocolAmount;
+
+            gladiators[winner].totalYieldWon += winnerAmount;
             
+            uint256 totalPayout = winnerAmount;
+            
+            // If paying out, calculate where it comes from
             if (moolaPrize > 0) {
-                _withdrawFromYield(moolaPrize, winner, winnerToken);
-            }
-            
-            if (simulatedPrize > 0) {
-                if (winnerToken == CELO_ERC20) {
-                    (bool success, ) = winner.call{value: simulatedPrize}("");
-                    require(success, "Simulated CELO yield transfer failed");
-                } else {
-                    require(IERC20(winnerToken).transfer(winner, simulatedPrize), "Simulated ERC20 yield transfer failed");
+                uint256 moolaPayout = (moolaPrize > totalPayout) ? totalPayout : moolaPrize;
+                if (moolaPayout > 0) {
+                    _withdrawFromYield(moolaPayout, winner, token);
+                    totalPayout -= moolaPayout;
                 }
             }
+            
+            if (totalPayout > 0) {
+                if (token == CELO_ERC20) {
+                    (bool success, ) = winner.call{value: totalPayout}("");
+                    require(success, "Simulated CELO yield transfer failed");
+                } else {
+                    require(IERC20(token).transfer(winner, totalPayout), "Simulated ERC20 yield transfer failed");
+                }
+            }
+
+            if (accumulatedPrizePools[token] >= 5 ether) { // Using 5 ether as a proxy threshold for mega yield
+                emit MegaYieldThreshold(accumulatedPrizePools[token]);
+            }
         }
-        
-        emit FightResolved(winner, loser, totalPrize);
     }
 
     function exitArena() external nonReentrant {
         require(gladiators[msg.sender].isActive, "You are not in the arena");
+        require(currentFight[msg.sender] == 0, "Finish your fight first");
         
         _updateSimulatedYield();
 
@@ -273,7 +457,7 @@ contract PayOrPass is ReentrancyGuard {
         gladiators[msg.sender].principalStaked = 0;
         gladiators[msg.sender].isActive = false;
         
-        if (gladiators[msg.sender].strategy == YieldStrategy.MOOLA) {
+        if (yieldPools[token] != address(0)) {
             totalMoolaStakes[token] -= amountToReturn;
             _withdrawFromYield(amountToReturn, msg.sender, token);
         } else {
