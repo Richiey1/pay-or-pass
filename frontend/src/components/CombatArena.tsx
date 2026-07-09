@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { Zap, Shield, TrendingUp, Skull } from 'lucide-react';
 
 export default function CombatArena() {
-  const [choice, setChoice] = useState<'ATTACK' | 'DEFEND' | 'INVEST' | null>(null);
+  const [choice, setChoice] = useState<'STRIKE' | 'BLOCK' | 'YIELD' | null>(null);
   const [status, setStatus] = useState<'IDLE' | 'COMMITTED' | 'RESOLVING' | 'WIN' | 'LOSS' | 'CLASH'>('IDLE');
 
   const handleCommit = () => {
@@ -60,39 +60,39 @@ export default function CombatArena() {
           
           <div className="grid grid-cols-3 gap-4 mb-8">
             <button 
-              onClick={() => setChoice('ATTACK')}
+              onClick={() => setChoice('STRIKE')}
               disabled={status !== 'IDLE' && status !== 'WIN' && status !== 'LOSS' && status !== 'CLASH'}
               className={`p-4 rounded border-2 transition-all flex flex-col items-center gap-3
-                ${choice === 'ATTACK' ? 'border-red-500 bg-red-950/50 shadow-[0_0_15px_rgba(239,68,68,0.5)]' : 'border-gray-800 hover:border-red-900 bg-gray-900'}
+                ${choice === 'STRIKE' ? 'border-red-500 bg-red-950/50 shadow-[0_0_15px_rgba(239,68,68,0.5)]' : 'border-gray-800 hover:border-red-900 bg-gray-900'}
                 disabled:opacity-50 disabled:cursor-not-allowed`}
             >
-              <Zap className={choice === 'ATTACK' ? 'text-red-500' : 'text-gray-500'} size={32} />
-              <div className={`font-bold ${choice === 'ATTACK' ? 'text-red-400' : 'text-gray-500'}`}>ATTACK</div>
-              <div className="text-xs text-gray-600 text-center">Beats Invest<br/>Loses to Defend</div>
+              <Zap className={choice === 'STRIKE' ? 'text-red-500' : 'text-gray-500'} size={32} />
+              <div className={`font-bold ${choice === 'STRIKE' ? 'text-red-400' : 'text-gray-500'}`}>STRIKE</div>
+              <div className="text-xs text-gray-600 text-center">Beats Yield<br/>Loses to Block</div>
             </button>
 
             <button 
-              onClick={() => setChoice('DEFEND')}
+              onClick={() => setChoice('BLOCK')}
               disabled={status !== 'IDLE' && status !== 'WIN' && status !== 'LOSS' && status !== 'CLASH'}
               className={`p-4 rounded border-2 transition-all flex flex-col items-center gap-3
-                ${choice === 'DEFEND' ? 'border-blue-500 bg-blue-950/50 shadow-[0_0_15px_rgba(59,130,246,0.5)]' : 'border-gray-800 hover:border-blue-900 bg-gray-900'}
+                ${choice === 'BLOCK' ? 'border-blue-500 bg-blue-950/50 shadow-[0_0_15px_rgba(59,130,246,0.5)]' : 'border-gray-800 hover:border-blue-900 bg-gray-900'}
                 disabled:opacity-50 disabled:cursor-not-allowed`}
             >
-              <Shield className={choice === 'DEFEND' ? 'text-blue-500' : 'text-gray-500'} size={32} />
-              <div className={`font-bold ${choice === 'DEFEND' ? 'text-blue-400' : 'text-gray-500'}`}>DEFEND</div>
-              <div className="text-xs text-gray-600 text-center">Beats Attack<br/>Loses to Invest</div>
+              <Shield className={choice === 'BLOCK' ? 'text-blue-500' : 'text-gray-500'} size={32} />
+              <div className={`font-bold ${choice === 'BLOCK' ? 'text-blue-400' : 'text-gray-500'}`}>BLOCK</div>
+              <div className="text-xs text-gray-600 text-center">Beats Strike<br/>Loses to Yield</div>
             </button>
 
             <button 
-              onClick={() => setChoice('INVEST')}
+              onClick={() => setChoice('YIELD')}
               disabled={status !== 'IDLE' && status !== 'WIN' && status !== 'LOSS' && status !== 'CLASH'}
               className={`p-4 rounded border-2 transition-all flex flex-col items-center gap-3
-                ${choice === 'INVEST' ? 'border-green-500 bg-green-950/50 shadow-[0_0_15px_rgba(34,197,94,0.5)]' : 'border-gray-800 hover:border-green-900 bg-gray-900'}
+                ${choice === 'YIELD' ? 'border-green-500 bg-green-950/50 shadow-[0_0_15px_rgba(34,197,94,0.5)]' : 'border-gray-800 hover:border-green-900 bg-gray-900'}
                 disabled:opacity-50 disabled:cursor-not-allowed`}
             >
-              <TrendingUp className={choice === 'INVEST' ? 'text-green-500' : 'text-gray-500'} size={32} />
-              <div className={`font-bold ${choice === 'INVEST' ? 'text-green-400' : 'text-gray-500'}`}>INVEST</div>
-              <div className="text-xs text-gray-600 text-center">Beats Defend<br/>Loses to Attack</div>
+              <TrendingUp className={choice === 'YIELD' ? 'text-green-500' : 'text-gray-500'} size={32} />
+              <div className={`font-bold ${choice === 'YIELD' ? 'text-green-400' : 'text-gray-500'}`}>YIELD</div>
+              <div className="text-xs text-gray-600 text-center">Beats Block<br/>Loses to Strike</div>
             </button>
           </div>
 
