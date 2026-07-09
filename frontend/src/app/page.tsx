@@ -1,555 +1,60 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect } from "react";
-import { useDisconnect, useWaitForTransactionReceipt } from "wagmi";
-import { useAppKit } from "@reown/appkit/react";
-import AdminPanel from "@/components/AdminPanel";
-import { useLosslessArena } from "@/hooks/useLosslessArena";
-import { TransactionModal } from "@/components/ui/TransactionModal";
-import { GameGuideModal } from "@/components/ui/GameGuideModal";
-import { OpponentHUDModal } from "@/components/ui/OpponentHUDModal";
-import { useMiniPay } from "@/hooks/useMiniPay";
-import { useCeloPrice } from "@/hooks/useCeloPrice";
-import { 
-  Swords, 
-  Shield, 
-  Trophy, 
-  Zap, 
-  User,
-  ArrowRight,
-  TrendingUp,
-  Skull,
-  LogOut,
-  Crosshair,
-  RefreshCw,
-  Copy,
-  Check,
-  Info
-} from "lucide-react";
-import { TOKENS, TokenSymbol } from "@/lib/constants/tokens";
+import React, { useState, useEffect } from 'react';
+import { useAccount } from 'wagmi';
+import CombatArena from '@/components/CombatArena';
+import { Skull, Coins, ShieldAlert } from 'lucide-react';
 
-export default function LosslessArenaHome() {
-  const [copied, setCopied] = useState(false);
-  const [isGuideOpen, setIsGuideOpen] = useState(false);
-  const [viewingOpponent, setViewingOpponent] = useState<string | null>(null);
+export default function PayOrPassHome() {
+  const [mounted, setMounted] = useState(false);
+  const { address } = useAccount();
 
-  // Check if first time user
   useEffect(() => {
-    const hasSeenGuide = localStorage.getItem('hasSeenGuide_PayOrPass');
-    if (!hasSeenGuide) {
-      setIsGuideOpen(true);
-      localStorage.setItem('hasSeenGuide_PayOrPass', 'true');
-    }
+    setMounted(true);
   }, []);
 
-  const handleCopy = () => {
-    if (address) {
-      navigator.clipboard.writeText(address);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
-  };
-  const { disconnect } = useDisconnect();
-  const { open } = useAppKit();
-  const [stakeAmount, setStakeAmount] = useState("");
-  
-  // Auto-connect inside Celo MiniPay
-  const { isMiniPay } = useMiniPay();
-  const celoUsdRate = useCeloPrice();
-  const [currentPage, setCurrentPage] = useState(1);
-  const [selectedToken, setSelectedToken] = useState<TokenSymbol>('CELO');
-  const [selectedStrategy, setSelectedStrategy] = useState<number>(0); // 0 = Simulated, 1 = Moola
-  
-  const {
-    address,
-    isConnected,
-    totalStake,
-    currentPrize,
-    activePlayers,
-    entryFee,
-    isAdmin,
-    isInArena,
-    myWins,
-    myLosses,
-    myYieldWon,
-    selectedOpponent,
-    setSelectedOpponent,
-    enterArena,
-    fight,
-    exitArena,
-    triggerRefetch,
-    balance,
-    formattedBalance,
-    txState,
-    setTxState,
-    txError,
-    txHash,
-    activeAction,
-    isLoading,
-  } = useLosslessArena();
-
-  // Watch for transaction confirmations
-  const { data: txReceipt, isSuccess: txConfirmed } = useWaitForTransactionReceipt({
-    hash: txHash as `0x${string}` | undefined,
-  });
-
-  useEffect(() => {
-    if (!stakeAmount || stakeAmount === "10" || stakeAmount === "5") {
-      setStakeAmount(TOKENS[selectedToken].entryFee);
-    }
-  }, [selectedToken]);
-
-  useEffect(() => {
-    if (txConfirmed) {
-      setTxState("confirmed");
-      triggerRefetch();
-      // Reset state after a delay
-      const t = setTimeout(() => {
-        setTxState("idle");
-      }, 5000);
-      return () => clearTimeout(t);
-    }
-  }, [txConfirmed, triggerRefetch, setTxState]);
+  if (!mounted) return null;
 
   return (
-    <>
-    <div className="min-h-screen bg-black text-white font-sans overflow-x-hidden relative flex flex-col">
-      {/* Background Gradients */}
-      <div className="fixed inset-0 z-0 opacity-20 pointer-events-none">
-        <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-red-600 blur-[150px] rounded-full" />
-        <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-orange-600 blur-[150px] rounded-full" />
-      </div>
+    <div className="min-h-screen bg-black text-gray-200 font-mono flex flex-col relative overflow-hidden">
+      {/* Background elements */}
+      <div className="absolute top-[-20%] left-[-10%] w-96 h-96 bg-red-900/20 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-[-20%] right-[-10%] w-96 h-96 bg-blue-900/20 rounded-full blur-[120px] pointer-events-none" />
 
-      {/* Header Bar */}
-      <header className="relative z-20 flex items-center justify-between p-4 md:p-6 bg-transparent">
-        <div className="flex items-center">
-          <img 
-            src="/payorpass-logo.png" 
-            alt="PayorPass Logo" 
-            className="h-24 w-auto object-contain" 
-          />
-        </div>
-        
-        {isConnected && (
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setIsGuideOpen(true)}
-              className="flex items-center justify-center p-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/30 text-white/70 hover:text-white transition-all cursor-pointer shadow-lg"
-              title="How to Play"
-            >
-              <Info className="w-5 h-5" />
-            </button>
-            <button
-              onClick={() => triggerRefetch()}
-              className="flex items-center justify-center p-2 rounded-xl bg-white/5 hover:bg-green-500/10 border border-white/10 hover:border-green-500/30 text-white/70 hover:text-green-500 transition-all cursor-pointer shadow-lg"
-              title="Refresh Data"
-            >
-              <RefreshCw className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
-            </button>
-            {!isMiniPay && (
-              <button
-                onClick={() => disconnect()}
-                className="flex items-center justify-center p-2 rounded-xl bg-white/5 hover:bg-red-500/10 border border-white/10 hover:border-red-500/30 text-white/70 hover:text-red-500 transition-all cursor-pointer shadow-lg"
-                title="Disconnect Wallet"
-              >
-                <LogOut className="w-5 h-5" />
-              </button>
-            )}
+      {/* Navbar Minimal */}
+      <nav className="p-6 border-b border-gray-800 flex justify-between items-center relative z-10 bg-black/50 backdrop-blur-md">
+        <h1 className="text-2xl font-black tracking-widest text-white flex items-center gap-3">
+          <Skull className="text-red-500" />
+          PAY OR PASS
+        </h1>
+        <div className="flex gap-4 items-center">
+          <div className="text-sm font-bold bg-gray-900 px-4 py-2 rounded-full border border-gray-700 flex items-center gap-2">
+            <Coins size={16} className="text-yellow-500" />
+            Prize Pool: <span className="text-white">1,245.50 CELO</span>
           </div>
-        )}
-      </header>
+          <w3m-button />
+        </div>
+      </nav>
 
-      {/* Main Body */}
-      <main className="relative z-10 flex-1 max-w-6xl mx-auto w-full p-4 sm:p-6 md:p-8 flex flex-col justify-center">
-        {!isConnected ? (
-          <div className="flex flex-col items-center justify-center text-center py-12 px-4 max-w-2xl mx-auto space-y-8 my-auto relative">
-            
-            {/* Guide Button for Disconnected Users */}
-            <button
-              onClick={() => setIsGuideOpen(true)}
-              className="absolute top-0 right-0 flex items-center justify-center p-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/30 text-white/70 hover:text-white transition-all cursor-pointer shadow-lg"
-              title="How to Play"
-            >
-              <Info className="w-5 h-5" />
-            </button>
-
-            <h1 className="text-7xl md:text-9xl font-black tracking-tighter uppercase italic leading-[0.8] text-transparent bg-clip-text bg-gradient-to-br from-white to-red-600">
-              PAYOR<br/>PASS
-            </h1>
-            
-            <p className="text-red-200/50 font-bold uppercase text-sm tracking-widest max-w-2xl leading-relaxed">
-              An Elite Retail Onboarding Play. We abstract away complex DeFi yield generation behind a fun, risk-free arcade game to drive massive Daily Active Users. Stake {entryFee} CELO, fight for the accrued yield, keep your principal 100% safe.
+      {/* Main Content */}
+      <main className="flex-1 flex flex-col items-center justify-center p-8 relative z-10">
+        {!address ? (
+          <div className="text-center bg-gray-900/80 p-12 rounded-xl border border-gray-800 backdrop-blur-md max-w-lg">
+            <ShieldAlert className="mx-auto text-red-500 mb-6" size={48} />
+            <h2 className="text-3xl font-bold text-white mb-4">CONNECT TO ENTER</h2>
+            <p className="text-gray-400 mb-8 leading-relaxed">
+              Pay Or Pass is a lossless yield arena. Stake your principal safely, then battle others to win the generated yield.
             </p>
-            
-            {!isMiniPay ? (
-              <button
-                onClick={() => open()}
-                className="w-full max-w-md bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 text-white font-black p-5 rounded-2xl transition-all text-xl shadow-[0_0_50px_rgba(220,38,38,0.4)] hover:scale-105 active:scale-95 cursor-pointer uppercase tracking-widest flex items-center justify-center gap-3"
-              >
-                <Zap className="w-6 h-6 animate-bounce" /> START GAME
-              </button>
-            ) : (
-              <div className="w-full max-w-md bg-white/5 border border-white/10 text-white/50 font-black p-5 rounded-2xl text-xl uppercase tracking-widest flex items-center justify-center gap-3">
-                <Zap className="w-6 h-6 animate-pulse" /> Connecting MiniPay...
-              </div>
-            )}
+            <div className="flex justify-center">
+              <w3m-button />
+            </div>
           </div>
         ) : (
-          <div className="space-y-12 py-6">
-            {/* Global Stats HUD */}
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-6">
-              <div className="bg-white/5 border border-white/10 p-4 md:p-6 rounded-2xl md:rounded-3xl backdrop-blur-md flex flex-col items-center justify-center text-center relative overflow-hidden">
-                <TrendingUp className="w-6 h-6 md:w-8 md:h-8 text-red-500 mb-2" />
-                <div className="text-[10px] md:text-sm font-black text-white/50 tracking-widest">GLOBAL PRIZE POOL</div>
-                {isLoading ? (
-                  <div className="h-8 md:h-10 w-24 md:w-32 bg-white/10 rounded animate-pulse my-1" />
-                ) : (
-                  <div className="text-xl md:text-4xl font-black text-red-500">{parseFloat(currentPrize).toFixed(4)} <span className="text-sm md:text-xl text-red-500/50">CELO</span></div>
-                )}
-                <div className="text-[9px] md:text-xs text-white/30 mt-1">Accruing at 8% APY (Est.)</div>
-              </div>
-              <div className="bg-white/5 border border-white/10 p-4 md:p-6 rounded-2xl md:rounded-3xl backdrop-blur-md flex flex-col items-center justify-center text-center relative overflow-hidden">
-                <Shield className="w-6 h-6 md:w-8 md:h-8 text-orange-500 mb-2" />
-                <div className="text-[10px] md:text-sm font-black text-white/50 tracking-widest">TOTAL VALUE LOCKED</div>
-                {isLoading ? (
-                  <div className="h-8 md:h-10 w-24 md:w-32 bg-white/10 rounded animate-pulse my-1" />
-                ) : (
-                  <div className="text-xl md:text-4xl font-black text-white">{parseFloat(totalStake).toFixed(4)} <span className="text-sm md:text-xl text-white/50">CELO</span></div>
-                )}
-                <div className="text-[9px] md:text-xs text-white/30 mt-1">100% Principal Safe</div>
-              </div>
-              <div className="col-span-2 md:col-span-1 bg-white/5 border border-white/10 p-4 md:p-6 rounded-2xl md:rounded-3xl backdrop-blur-md flex flex-col items-center justify-center text-center relative overflow-hidden">
-                <User className="w-6 h-6 md:w-8 md:h-8 text-yellow-500 mb-2" />
-                <div className="text-[10px] md:text-sm font-black text-white/50 tracking-widest">ACTIVE GLADIATORS</div>
-                {isLoading ? (
-                  <div className="h-8 md:h-10 w-12 md:w-16 bg-white/10 rounded animate-pulse my-1" />
-                ) : (
-                  <div className="text-2xl md:text-4xl font-black text-white">{activePlayers.length}</div>
-                )}
-                <div className="text-[9px] md:text-xs text-white/30 mt-1">Currently in combat</div>
-              </div>
-            </div>
-
-            {/* Action Panel */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-              
-              {/* My Gladiator Profile (4 cols) */}
-              <div className="lg:col-span-4 bg-gradient-to-b from-red-900/20 to-black border border-red-500/30 rounded-3xl p-8 relative overflow-hidden flex flex-col items-center text-center">
-                <div className="absolute top-0 w-full h-1 bg-gradient-to-r from-transparent via-red-500 to-transparent" />
-                
-                <h2 className="text-2xl font-black italic tracking-widest mb-6">MY GLADIATOR</h2>
-                
-                {isLoading ? (
-                  <div className="space-y-5 w-full mt-4 animate-pulse">
-                    <div className="w-20 h-20 mx-auto rounded-full bg-white/10" />
-                    <div className="h-4 w-1/2 bg-white/10 rounded mx-auto" />
-                    <div className="h-10 w-full bg-white/5 border border-white/10 rounded-xl" />
-                    <div className="h-10 w-full bg-red-600/20 border border-red-600/30 rounded-2xl" />
-                  </div>
-                ) : !isInArena ? (
-                  <div className="space-y-5 w-full mt-4">
-                    <div className="w-20 h-20 mx-auto rounded-full border-4 border-white/10 bg-white/5 overflow-hidden relative flex items-center justify-center shadow-lg">
-                      <img
-                        src="https://api.dicebear.com/7.x/bottts/svg?seed=Gladiator"
-                        alt="Gladiator Avatar"
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <div className="flex items-center justify-center gap-2 text-white/50 text-xs font-mono">
-                      {address ? (
-                        <>
-                          <span>{`${address.slice(0, 6)}...${address.slice(-4)}`}</span>
-                          <button onClick={handleCopy} className="hover:text-white transition-colors cursor-pointer" title="Copy address">
-                            {copied ? <Check className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3" />}
-                          </button>
-                        </>
-                      ) : "You are currently sitting in the stands."}
-                    </div>
-                    
-                    <div className="text-white/40 text-[10px] italic -mt-2">You are currently sitting in the stands.</div>
-                    
-                    <div className="space-y-3 w-full text-left">
-                      <div className="flex justify-between items-center text-[10px] text-white/50 font-black uppercase tracking-wider mb-1">
-                        <span>Stake Amount & Token</span>
-                        {formattedBalance && (
-                          <span>
-                            CELO Bal: {parseFloat(formattedBalance).toFixed(4)} 
-                            <span className="text-red-400 font-mono ml-1">(${(parseFloat(formattedBalance) * celoUsdRate).toFixed(2)})</span>
-                          </span>
-                        )}
-                      </div>
-
-                      <div className="flex gap-2">
-                        <select
-                          value={selectedToken}
-                          onChange={(e) => setSelectedToken(e.target.value as TokenSymbol)}
-                          className="w-1/3 bg-black border border-white/10 rounded-xl px-2 py-3 text-xs font-black outline-none text-white"
-                        >
-                          {Object.keys(TOKENS).map(key => (
-                            <option key={key} value={key}>{TOKENS[key as TokenSymbol].symbol}</option>
-                          ))}
-                        </select>
-                        <div className="relative flex-1">
-                          <input
-                            type="number"
-                            step="0.01"
-                            min={entryFee}
-                            value={stakeAmount}
-                            onChange={(e) => setStakeAmount(e.target.value)}
-                            placeholder={`Min ${TOKENS[selectedToken].entryFee}`}
-                            className="w-full bg-black border border-white/10 focus:border-red-500/50 rounded-xl px-4 py-3 text-xs font-black outline-none transition-all text-white pr-14"
-                          />
-                          <span className="absolute right-4 top-3 text-[10px] text-white/30 font-black">{TOKENS[selectedToken].symbol}</span>
-                        </div>
-                        <button
-                          onClick={() => {
-                            if (formattedBalance) {
-                              const maxStake = Math.max(0, parseFloat(formattedBalance) - 0.05);
-                              setStakeAmount(maxStake.toFixed(4));
-                            }
-                          }}
-                          className="px-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black uppercase text-white transition-all cursor-pointer"
-                        >
-                          Max
-                        </button>
-                      </div>
-
-                      {stakeAmount && !isNaN(parseFloat(stakeAmount)) && (
-                        <div className="flex justify-between items-center text-[10px] text-red-400 font-mono mt-1">
-                          <span>Est. Value: ${(parseFloat(stakeAmount || "0") * celoUsdRate).toFixed(2)} USD</span>
-                          <span>Raw: {(parseFloat(stakeAmount || "0") * 1e18).toLocaleString("fullwide", {useGrouping: false})} Wei</span>
-                        </div>
-                      )}
-
-                      {formattedBalance && stakeAmount && parseFloat(stakeAmount) > parseFloat(formattedBalance) && (
-                        <div className="flex flex-col items-center gap-2 mt-2">
-                          <div className="text-center text-[9px] text-red-500 font-black uppercase tracking-wider">
-                            ⚠️ Insufficient balance for stake
-                          </div>
-                          {isMiniPay && (
-                            <a 
-                              href="https://minipay.opera.com/add_cash"
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="px-4 py-1.5 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-white font-black rounded-lg text-xs uppercase tracking-widest transition-all shadow-[0_0_15px_rgba(16,185,129,0.3)] cursor-pointer"
-                            >
-                              Add Cash
-                            </a>
-                          )}
-                        </div>
-                      )}
-                      
-                      {stakeAmount && parseFloat(stakeAmount) < parseFloat(TOKENS[selectedToken].entryFee) && (
-                        <div className="text-center text-[9px] text-red-500 font-black uppercase tracking-wider mt-2">
-                          ⚠️ Minimum Stake is {TOKENS[selectedToken].entryFee} {TOKENS[selectedToken].symbol}
-                        </div>
-                      )}
-                    </div>
-
-                    <button 
-                      onClick={() => enterArena(stakeAmount, TOKENS[selectedToken].address, selectedStrategy)}
-                      disabled={
-                        !stakeAmount || 
-                        isNaN(parseFloat(stakeAmount)) || 
-                        parseFloat(stakeAmount) < parseFloat(TOKENS[selectedToken].entryFee) ||
-                        (selectedToken === 'CELO' && formattedBalance ? parseFloat(stakeAmount) > parseFloat(formattedBalance) : false)
-                      }
-                      className="w-full bg-red-600 hover:bg-red-500 text-white font-black p-4 rounded-2xl transition-all shadow-[0_0_30px_rgba(220,38,38,0.4)] flex items-center justify-center gap-2 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed text-xs mt-4"
-                    >
-                      STAKE TO ENTER <Swords className="w-5 h-5" />
-                    </button>
-                  </div>
-                ) : (
-                  <div className="space-y-6 w-full">
-                    <div className="w-24 h-24 mx-auto rounded-full border-4 border-red-500 overflow-hidden bg-red-500/10 relative shadow-[0_0_30px_rgba(220,38,38,0.5)] flex items-center justify-center">
-                      <img
-                        src={`https://api.dicebear.com/7.x/bottts/svg?seed=${address}`}
-                        alt="My Gladiator"
-                        className="w-full h-full object-cover"
-                      />
-                      <div className="absolute -bottom-2 -right-2 bg-red-600 text-[10px] font-black px-2 py-1 rounded border border-black z-10">ACTIVE</div>
-                    </div>
-                    
-                    <div className="flex items-center justify-center gap-2 text-white/50 text-xs font-mono -mt-4 mb-2">
-                      <span>{address ? `${address.slice(0, 6)}...${address.slice(-4)}` : ""}</span>
-                      {address && (
-                        <button onClick={handleCopy} className="hover:text-white transition-colors cursor-pointer" title="Copy address">
-                          {copied ? <Check className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3" />}
-                        </button>
-                      )}
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="bg-black/50 p-3 rounded-xl border border-white/10">
-                        <div className="text-[10px] text-white/50 font-black">RECORD</div>
-                        <div className="text-xl font-black text-white">{myWins}W - {myLosses}L</div>
-                      </div>
-                      <div className="bg-black/50 p-3 rounded-xl border border-white/10">
-                        <div className="text-[10px] text-white/50 font-black">YIELD WON</div>
-                        <div className="text-xl font-black text-emerald-400">{myYieldWon}</div>
-                      </div>
-                    </div>
-
-                    <div className="pt-4 space-y-3">
-                      <button 
-                        onClick={exitArena}
-                        className="w-full bg-transparent border border-white/20 hover:bg-white/5 text-white/70 hover:text-white font-black p-4 rounded-2xl transition-all flex items-center justify-center gap-2 text-sm cursor-pointer"
-                      >
-                        <LogOut className="w-4 h-4" /> WITHDRAW PRINCIPAL & EXIT
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* The Arena (8 cols) */}
-              <div className="lg:col-span-8 bg-black/40 border border-white/10 rounded-3xl p-8 backdrop-blur-md">
-                <h2 className="text-2xl font-black italic tracking-widest mb-6 flex items-center gap-2">
-                  <Crosshair className="w-6 h-6 text-red-500" /> SELECT OPPONENT
-                </h2>
-                
-                <div className="space-y-4">
-                  {isLoading ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {Array.from({ length: 4 }).map((_, i) => (
-                        <div key={i} className="p-4 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between animate-pulse">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-white/10" />
-                            <div className="space-y-2">
-                              <div className="h-3 w-24 bg-white/10 rounded" />
-                              <div className="h-2.5 w-12 bg-white/5 rounded" />
-                            </div>
-                          </div>
-                          <div className="h-6 w-12 bg-white/10 rounded" />
-                        </div>
-                      ))}
-                    </div>
-                  ) : activePlayers.length === 0 ? (
-                    <div className="text-white/40 italic py-10 text-center">The arena is empty. Be the first to enter.</div>
-                  ) : activePlayers.length === 1 && address && activePlayers[0].toLowerCase() === address.toLowerCase() ? (
-                    <div className="text-white/40 italic py-10 text-center">You are currently the only player in the arena. Waiting for opponents to enter...</div>
-                  ) : (
-                    <>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {activePlayers
-                          .filter(playerAddr => playerAddr.toLowerCase() !== address?.toLowerCase())
-                          .slice((currentPage - 1) * 6, currentPage * 6)
-                          .map((playerAddr) => {
-                          const isSelected = selectedOpponent === playerAddr;
-                          return (
-                            <div 
-                              key={playerAddr}
-                              onClick={() => setViewingOpponent(playerAddr)}
-                              className={`group cursor-pointer p-4 rounded-2xl border transition-all flex items-center justify-between ${
-                                isSelected 
-                                  ? "bg-red-900/40 border-red-500 shadow-[0_0_20px_rgba(220,38,38,0.3)]" 
-                                  : "bg-white/5 border-white/10 hover:border-red-500/30 hover:bg-red-950/10"
-                              }`}
-                            >
-                              <div className="flex items-center gap-3">
-                                <div className={`w-10 h-10 rounded-full overflow-hidden flex items-center justify-center border-2 transition-all ${isSelected ? 'border-red-500 bg-red-500/20 animate-pulse' : 'border-white/10 bg-white/5'}`}>
-                                  <img
-                                    src={`https://api.dicebear.com/7.x/bottts/svg?seed=${playerAddr}`}
-                                    alt="Gladiator"
-                                    className="w-full h-full object-cover"
-                                  />
-                                </div>
-                                <div>
-                                  <div className="font-mono text-sm font-bold text-white/80">
-                                    {playerAddr.slice(0,6)}...{playerAddr.slice(-4)}
-                                  </div>
-                                  <div className="text-[10px] text-white/40 font-black tracking-widest mt-1">GLADIATOR</div>
-                                </div>
-                              </div>
-                              <div>
-                                {isSelected ? (
-                                  <span className="text-[9px] font-black text-red-500 px-2.5 py-1 rounded bg-red-950/30 border border-red-500/50 uppercase tracking-widest flex items-center gap-1 animate-pulse">
-                                    <Crosshair className="w-3 h-3 text-red-500" /> LOCKED
-                                  </span>
-                                ) : (
-                                  <span className="text-[9px] font-black text-white/30 px-2.5 py-1 rounded bg-white/5 border border-white/5 uppercase tracking-widest group-hover:text-red-500 group-hover:border-red-500/30 transition-all">
-                                    SELECT
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          )
-                        })}
-                      </div>
-                      
-                      {activePlayers.filter(p => p.toLowerCase() !== address?.toLowerCase()).length > 6 && (
-                        <div className="flex justify-center items-center gap-4 mt-6">
-                          <button 
-                            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                            disabled={currentPage === 1}
-                            className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-xs font-black uppercase text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-                          >
-                            Prev
-                          </button>
-                          <span className="text-white/50 text-xs font-black">
-                            {currentPage} / {Math.ceil(activePlayers.filter(p => p.toLowerCase() !== address?.toLowerCase()).length / 6)}
-                          </span>
-                          <button 
-                            onClick={() => setCurrentPage(prev => Math.min(Math.ceil(activePlayers.filter(p => p.toLowerCase() !== address?.toLowerCase()).length / 6), prev + 1))}
-                            disabled={currentPage === Math.ceil(activePlayers.filter(p => p.toLowerCase() !== address?.toLowerCase()).length / 6)}
-                            className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-xs font-black uppercase text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-                          >
-                            Next
-                          </button>
-                        </div>
-                      )}
-                    </>
-                  )}
-                </div>
-
-                {/* Combat Execution */}
-                <div className="mt-8 pt-8 border-t border-white/10">
-                  <button
-                    onClick={fight}
-                    disabled={!isInArena || !selectedOpponent}
-                    className="w-full bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 text-white font-black p-5 rounded-2xl transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-3 text-xl shadow-[0_0_40px_rgba(220,38,38,0.3)] cursor-pointer"
-                  >
-                    <Swords className="w-6 h-6" /> INITIATE COMBAT
-                  </button>
-                  {!isInArena && (
-                    <div className="text-center text-xs text-red-400 font-bold mt-3">You must be in the arena to fight.</div>
-                  )}
-                </div>
-              </div>
-
-            </div>
-            
-            {/* Owner Governance Admin Console */}
-            {isAdmin && (
-              <div className="mt-8">
-                <AdminPanel />
-              </div>
-            )}
+          <div className="w-full">
+            <CombatArena />
           </div>
         )}
       </main>
-      <TransactionModal
-        txState={txState}
-        txError={txError}
-        txHash={txHash}
-        activeAction={activeAction}
-        entryFee={entryFee}
-        usdRate={celoUsdRate}
-        onClose={() => setTxState("idle")}
-      />
-      <GameGuideModal
-        isOpen={isGuideOpen}
-        onClose={() => setIsGuideOpen(false)}
-        entryFee={entryFee || "0.50"}
-      />
-      <OpponentHUDModal
-        isOpen={!!viewingOpponent}
-        onClose={() => setViewingOpponent(null)}
-        opponentAddress={viewingOpponent}
-        onSelect={(addr) => setSelectedOpponent(addr)}
-        isInArena={isInArena}
-      />
     </div>
-    </>
   );
 }
