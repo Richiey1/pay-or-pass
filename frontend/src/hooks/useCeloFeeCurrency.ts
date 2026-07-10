@@ -29,6 +29,7 @@ export function useCeloFeeCurrency() {
   // Check USDm balance
   const { data: usdmBalance } = useBalance({
     address,
+    // @ts-ignore
     token: CELO_FEE_CURRENCIES.USDm,
     query: { enabled: !!address },
   })
