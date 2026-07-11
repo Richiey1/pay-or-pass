@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useAccount, useReadContract, useWriteContract, useBalance } from "wagmi";
-import { formatEther, parseEther } from "viem";
+import { formatEther, parseEther, keccak256, encodePacked } from "viem";
 import { readContract } from "wagmi/actions";
 import { useConfig } from "wagmi";
 import { LOSSLESS_ARENA_ABI, CONTRACT_ADDRESS, FUNCTION_NAMES } from "@/lib/constants/contracts";
@@ -49,6 +49,7 @@ export function useLosslessArena() {
     address: CONTRACT_ADDRESS as `0x${string}`,
     abi: LOSSLESS_ARENA_ABI,
     functionName: FUNCTION_NAMES.GET_CURRENT_PRIZE_POOL,
+    args: ["0x471EcE3750Da237f93B8E339c536989b8978a438"],
   });
   
   const { data: activePlayersData, isLoading: isLoadingPlayers, refetch: refetchPlayers } = useReadContract({
@@ -68,6 +69,7 @@ export function useLosslessArena() {
     address: CONTRACT_ADDRESS as `0x${string}`,
     abi: LOSSLESS_ARENA_ABI,
     functionName: FUNCTION_NAMES.ENTRY_FEE,
+    args: ["0x471EcE3750Da237f93B8E339c536989b8978a438"], // CELO_ERC20 in PayOrPass
   });
 
   const { data: isAdminData } = useReadContract({
@@ -154,7 +156,7 @@ export function useLosslessArena() {
         address: CONTRACT_ADDRESS as `0x${string}`,
         abi: LOSSLESS_ARENA_ABI,
         functionName: FUNCTION_NAMES.ENTER_ARENA,
-        args: [strategy, token as `0x${string}`],
+        args: [token as `0x${string}`],
         value: token === "0x0000000000000000000000000000000000000000" ? stakeVal : BigInt(0),
         ...(feeCurrency ? { feeCurrency } : {}),
       } as any);
@@ -178,12 +180,15 @@ export function useLosslessArena() {
       // Simulate step
       await new Promise(r => setTimeout(r, 800));
 
-      setTxState("broadcasting");
+      const randomChoice = Math.floor(Math.random() * 3) + 1; // 1: Attack, 2: Defend, 3: Invest
+      const salt = "salt_" + Math.random().toString();
+      const commitHash = keccak256(encodePacked(["uint8", "string"], [randomChoice, salt]));
+
       const hash = await writeContractAsync({
         address: CONTRACT_ADDRESS as `0x${string}`,
         abi: LOSSLESS_ARENA_ABI,
-        functionName: FUNCTION_NAMES.FIGHT,
-        args: [selectedOpponent as `0x${string}`],
+        functionName: FUNCTION_NAMES.SUBMIT_CHOICE,
+        args: [selectedOpponent as `0x${string}`, commitHash],
         ...(feeCurrency ? { feeCurrency } : {}),
       } as any);
 
