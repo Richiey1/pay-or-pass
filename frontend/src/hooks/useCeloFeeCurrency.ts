@@ -37,7 +37,7 @@ export function useCeloFeeCurrency() {
   // Auto-resolve: if user has no USDm, fall back to CELO
   useEffect(() => {
     if (usdmBalance !== undefined && !autoResolved) {
-      if (usdmBalance.value === 0n) {
+      if (usdmBalance.value === BigInt(0)) {
         setSelectedCurrency('CELO')
       } else {
         setSelectedCurrency('USDm')
