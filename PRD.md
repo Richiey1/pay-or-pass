@@ -1,228 +1,64 @@
-# PayOrPass — Social Payment Game on Celo
+# 📘 Product Requirements Document (PRD): PayOrPass (Phase 2)
 
-## 🧠 One-Liner
+## 🟢 Product Name
+PayOrPass (Lossless Arena)
 
-A social mini-game where players must decide whether to pay a small amount or pass an increased amount to someone else — turning money into a game of pressure, strategy, and social dynamics.
-
----
-
-## 🎯 Vision
-
-Turn simple payments into an interactive, social, and behavioral experience — where money moves not just by intent, but by decision-making under pressure.
+## 🧠 One-Line Summary
+A social GameFi primitive where players stake assets into a lossless gladiator arena, fight for accumulated DeFi yield using commit-reveal combat, and keep 100% of their principal safe.
 
 ---
 
-## 🚨 Problem
-
-Digital payments today are:
-
-- Passive
-- One-directional
-- Non-interactive
-
-There is no **social or strategic layer** to how money moves.
-
-At the same time:
-
-- Users enjoy lightweight social games
-- Viral loops drive adoption
-- Financial behavior is influenced by peer pressure
+## 🎯 Problem Statement
+DeFi yield generation is isolated, boring, and too complex for retail users.
+- Standard yield strategies fail to provide any interactive engagement.
+- Users are often forced to choose between highly risky speculation or slow, boring yields.
+- There are no viral social loops built directly into DeFi protocols.
 
 ---
 
-## 💡 Core Concept
-
-A player receives a request:
-
-> “Pay 1 cUSD or pass 1.2 cUSD to someone else.”
-
-They must choose:
-
-- ✅ Pay → Lose 1 cUSD, chain ends
-- 🔁 Pass → Forward increased amount to another user
+## 💡 Solution
+PayOrPass abstracts DeFi complexity behind an engaging, risk-free game:
+- **100% Principal Protection:** Users stake CELO/USDm/etc., which is vaulted and earns yield (Simulated 8% APY or real Moola Market interest). The principal is never lost.
+- **Commit-Reveal Strategic Combat:** Replaces pure randomness with player agency. Players secretly choose Strike, Block, or Yield.
+- **Viral Social Loops:** Integrating Farcaster/Twitter sharing for daily "Free Fights" and referral-based Defense Buffs.
 
 ---
 
-## ⚡ Core Loop (10-second UX)
+## ⚙️ Core Product Features
 
-1. User receives a request
-2. Timer starts (e.g. 60 seconds)
-3. Choose:
-   - Pay → end chain
-   - Pass → send higher amount to another user
-4. Repeat until someone pays
+### 1. Strategic Combat (Strike / Block / Yield)
+- **Strike:** Drains a percentage of the opponent's yield.
+- **Block:** Defends against Strikes.
+- **Yield:** Grows the player's share cleanly, unless hit by a Strike.
+- Uses a `submitChoice` (commit) and `revealChoice` pattern.
 
----
+### 2. The 70/10/10 Prize Split
+When a fight is won, the entire global pool is NOT drained. Instead:
+- **70-80%** to the fight winner.
+- **10%** back to the Global Prize Pool (ensures the pool never hits zero).
+- **10%** to a Seasonal Leaderboard fund.
+- **5%** protocol fee.
 
-## 🎯 Key Mechanics
+### 3. Social Mechanics
+- **Daily Free Fight:** Sharing a gladiator profile or "Share My Victory" card on social media grants 1 Free Energy fight per day (24h cooldown).
+- **Referral Buff:** Friends joining via a referral link grant both players a +1 Defense Buff for 24 hours.
 
-### 1. Pass Multiplier
-
-- Each pass increases value (e.g. +20%)
-- Creates pressure escalation
-
-### 2. Time Constraint
-
-- If user does nothing → auto-pay
-- Prevents stalling
-
-### 3. Chain Tracking
-
-- Each chain has:
-  - Originator
-  - Path history
-  - Final payer
-
-### 4. Social Layer
-
-- Users choose who to pass to
-- Creates:
-  - Trust dynamics
-  - Strategic targeting
-  - Social tension
+### 4. Push Notifications
+- MiniPay web push notifies players when a "Mega Yield" threshold is crossed in the arena.
 
 ---
 
-## 🧠 “Wow” Moment
+## 🏗️ Technical Architecture
 
-> “Wait… I can push this to someone else — but it gets worse for them.”
+### Smart Contracts (Solidity)
+- **`LosslessArena.sol`**:
+  - Manages stakes, yields, and the commit-reveal combat logic.
+  - Implements the 70/10/10 `distributeFight()` split.
+  - Handles referral buff storage and daily free fight claims.
 
----
-
-## 🎮 Game Modes
-
-### Mode 1 — Classic
-
-- Single chain
-- Ends when someone pays
-
-### Mode 2 — Timed Survival
-
-- Last to survive without paying wins rewards
-
-### Mode 3 — Group Chain
-
-- Predefined group pool
-- Circular passing
-
----
-
-## 💰 Economic Model
-
-### Entry
-
-- Optional buy-in (e.g. 0.5 cUSD)
-
-### Flow
-
-- Money accumulates as chain grows
-- Final payer absorbs cost
-
-### Optional Reward Layer
-
-- Portion redistributed:
-  - Chain starter reward
-  - Longest survivor reward
-
----
-
-## 🔐 Smart Contract Design
-
-### Contracts
-
-#### 1. ChainManager
-
-- Create chains
-- Track participants
-- Store chain state
-
-#### 2. PaymentRouter
-
-- Handles:
-  - Transfers
-  - Pass logic
-  - Auto-execution
-
-#### 3. TimerModule
-
-- Enforces deadlines
-- Triggers auto-pay
-
----
-
-## 📱 UX Design (Celo Fit)
-
-- Mobile-first UI
-- Wallet connect (Valora / WalletConnect)
-- One-click actions:
-  - Pay
-  - Pass
-
----
-
-## 🔥 Why This Wins on Celo
-
-### Alignment
-
-- ✅ Payments (core primitive)
-- ✅ Miniapp (fast interaction loop)
-- ✅ Social (viral growth)
-- ✅ Real usage (actual money movement)
-
-### Metrics it drives
-
-- Transactions per user
-- Unique users
-- Gas usage
-- Retention via social loops
-
----
-
-## ⚠️ Risks & Mitigation
-
-### Risk: Looks like a chain scheme
-
-Mitigation:
-
-- Cap max multiplier
-- Add skill/strategy elements
-- Transparent rules
-
-### Risk: Abuse / spam
-
-Mitigation:
-
-- Rate limits
-- Opt-in participation
-- Contact filtering
-
----
-
-## 🚀 Future Extensions
-
-- Reputation scoring
-- NFT chain history
-- Sponsored chains (brands fund pools)
-- Farcaster integration (miniapp sharing)
-
----
-
-## 🏁 Success Metrics
-
-- Avg chain length
-- Daily active players
-- Completion rate
-- Total value moved
-- Viral coefficient
-
----
-
-## 💬 Final Insight
-
-This is not a gambling game.
-
-It is:
-
-> A behavioral experiment where money moves through social pressure and decision-making.
-
----
+### Frontend
+- Next.js (TypeScript) + Tailwind CSS.
+- Single "Stake & Enter" button (DeFi complexity hidden).
+- Animated round resolution screen.
+- Leaderboards (Top Earners, Longest Streak, Season Rank).
+- MiniPay CIP-64 fee abstraction.

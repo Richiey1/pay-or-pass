@@ -24,6 +24,7 @@ contract PayOrPass is ReentrancyGuard {
         uint256 lastFightAt;
         bool isActive;
         address stakeToken;
+        bool inMoola;
     }
 
     mapping(address => Gladiator) public gladiators;
@@ -210,16 +211,19 @@ contract PayOrPass is ReentrancyGuard {
                     losses: 0,
                     lastFightAt: 0,
                     isActive: true,
-                    stakeToken: token
+                    stakeToken: token,
+                    inMoola: yieldPools[token] != address(0)
                 });
                 activePlayers.push(msg.sender);
             } else {
                 require(gladiators[msg.sender].stakeToken == token, "Must use same token");
+                require(gladiators[msg.sender].inMoola == (yieldPools[token] != address(0)), "Yield state mismatch");
                 gladiators[msg.sender].principalStaked += amount;
                 gladiators[msg.sender].isActive = true;
             }
         } else {
             require(gladiators[msg.sender].stakeToken == token, "Must use same token");
+            require(gladiators[msg.sender].inMoola == (yieldPools[token] != address(0)), "Yield state mismatch");
             gladiators[msg.sender].principalStaked += amount;
         }
         
@@ -452,12 +456,13 @@ contract PayOrPass is ReentrancyGuard {
 
         uint256 amountToReturn = gladiators[msg.sender].principalStaked;
         address token = gladiators[msg.sender].stakeToken;
+        bool wasInMoola = gladiators[msg.sender].inMoola;
         require(amountToReturn > 0, "No principal to return");
         
         gladiators[msg.sender].principalStaked = 0;
         gladiators[msg.sender].isActive = false;
         
-        if (yieldPools[token] != address(0)) {
+        if (wasInMoola) {
             totalMoolaStakes[token] -= amountToReturn;
             _withdrawFromYield(amountToReturn, msg.sender, token);
         } else {

@@ -1,11 +1,11 @@
 {
-  "contractName": "LosslessArena",
-  "address": "0x9b932E9B16202760F4e3173B9Dbe060924857329",
+  "contractName": "PayOrPass",
+  "address": "0x6B667D149a8B0AF00C3880fE0f09a6D9D8Cb62C7",
   "deployer": "0xC1e4453d98fEe92504A2dC2114e6613053880A30",
   "network": "celo",
   "chainId": "42220",
-  "transactionHash": "0xab68ed0af6b56888741b821fcd680731591ca1ff85d7df62766855e31e538657",
-  "timestamp": "2026-06-05T22:41:24.624Z",
-  "blockNumber": 68798525,
+  "transactionHash": "0x1815b702061b5ccb3cac3ca790aa29a9ec67ec1be31cef467015e92797e70efe",
+  "timestamp": "2026-07-12T22:29:33.272Z",
+  "blockNumber": 71994614,
   "constructorArgs": []
 }

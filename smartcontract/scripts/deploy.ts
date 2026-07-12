@@ -19,14 +19,14 @@ async function main() {
   console.log("Starting deployment with nonce:", nonce, "\n");
 
   try {
-    const LosslessArena = await ethers.getContractFactory("LosslessArena");
+    const LosslessArena = await ethers.getContractFactory("PayOrPass");
     const losslessArena = await LosslessArena.deploy();
     
     console.log("Waiting for deployment confirmation...");
     await losslessArena.waitForDeployment();
     
     const contractAddress = await losslessArena.getAddress();
-    console.log("✅ LosslessArena deployed to:", contractAddress);
+    console.log("✅ PayOrPass deployed to:", contractAddress);
 
     const deployTx = losslessArena.deploymentTransaction();
     if (deployTx) {
@@ -37,7 +37,7 @@ async function main() {
     }
 
     const deploymentInfo = {
-      contractName: "LosslessArena",
+      contractName: "PayOrPass",
       address: contractAddress,
       deployer: deployer.address,
       network: network.name,
