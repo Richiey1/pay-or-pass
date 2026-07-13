@@ -96,23 +96,23 @@ contract PayOrPass is ReentrancyGuard {
         adminList.push(msg.sender);
         
         supportedTokens[CELO_ERC20] = true;
-        entryFees[CELO_ERC20] = 10 ether;
+        entryFees[CELO_ERC20] = 0.05 ether;
         
         address USDM = 0x765DE816845861e75A25fCA122bb6898B8B1282a;
         supportedTokens[USDM] = true;
-        entryFees[USDM] = 5 ether;
+        entryFees[USDM] = 2.5 ether;
 
         address EURM = 0xD8763CBa276a3738E6DE85b4b3bF5FDed6D6cA73;
         supportedTokens[EURM] = true;
-        entryFees[EURM] = 5 ether;
+        entryFees[EURM] = 2.5 ether;
 
         address USDT = 0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e;
         supportedTokens[USDT] = true;
-        entryFees[USDT] = 5 ether;
+        entryFees[USDT] = 2.5 ether;
 
         address USDC = 0xcebA9300f2b948710d2653dD7B07f33A8B32118C;
         supportedTokens[USDC] = true;
-        entryFees[USDC] = 5 ether;
+        entryFees[USDC] = 2.5 ether;
     }
 
     function _updateSimulatedYield() internal {
