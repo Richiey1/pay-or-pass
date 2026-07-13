@@ -124,6 +124,7 @@ export const GameGuideModal: React.FC<GameGuideModalProps> = ({ isOpen, onClose,
           <div className="flex gap-4">
             <div className="flex flex-col items-center mt-1">
               <div className="w-8 h-8 rounded-full bg-purple-500/20 border border-purple-500/50 flex items-center justify-center text-purple-400 font-black text-xs shrink-0">4</div>
+              <div className="w-px h-full bg-white/5 mt-2" />
             </div>
             <div className="space-y-2 pb-4">
               <h3 className="text-lg font-black text-white flex items-center gap-2">
@@ -132,6 +133,22 @@ export const GameGuideModal: React.FC<GameGuideModalProps> = ({ isOpen, onClose,
               <p className="text-xs text-white/60 leading-relaxed">
                 Earn 1 Free Energy fight per day by sharing your Gladiator Profile on X (Twitter) or Farcaster. Inviting a friend via a referral link grants both players a Defense Buff for 24 hours.
               </p>
+            </div>
+          </div>
+
+          {/* Step 5 */}
+          <div className="flex gap-4">
+            <div className="flex flex-col items-center mt-1">
+              <div className="w-8 h-8 rounded-full bg-blue-500/20 border border-blue-500/50 flex items-center justify-center text-blue-400 font-black text-xs shrink-0">5</div>
+            </div>
+            <div className="space-y-2 pb-4">
+              <h3 className="text-lg font-black text-white flex items-center gap-2">
+                <LogOut className="w-4 h-4 text-blue-500" /> EXIT ARENA & LEADERBOARDS
+              </h3>
+              <ul className="text-[11px] text-white/60 list-disc pl-4 mt-2 space-y-1">
+                <li><strong className="text-white">Exit:</strong> Click <strong>Withdraw Principal & Exit</strong> at any time to receive 100% of your initial stake back.</li>
+                <li><strong className="text-white">Leaderboards:</strong> The dashboard tracks Top Yield Earners, Longest Win Streaks, Most Fights, and Season Rank.</li>
+              </ul>
             </div>
           </div>
 
