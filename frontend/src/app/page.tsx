@@ -8,7 +8,6 @@ import { useLosslessArena } from "@/hooks/useLosslessArena";
 import { TransactionModal } from "@/components/ui/TransactionModal";
 import { GameGuideModal } from "@/components/ui/GameGuideModal";
 import { OpponentHUDModal } from "@/components/ui/OpponentHUDModal";
-import { HelpModal } from "@/components/ui/HelpModal";
 import { useMiniPay } from "@/hooks/useMiniPay";
 import { useCeloPrice } from "@/hooks/useCeloPrice";
 import { 
@@ -25,14 +24,12 @@ import {
   RefreshCw,
   Copy,
   Check,
-  Info,
-  HelpCircle
+  Info
 } from "lucide-react";
 
 export default function LosslessArenaHome() {
   const [copied, setCopied] = useState(false);
   const [isGuideOpen, setIsGuideOpen] = useState(false);
-  const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [viewingOpponent, setViewingOpponent] = useState<string | null>(null);
 
   // Check if first time user
@@ -132,12 +129,6 @@ export default function LosslessArenaHome() {
         
         {isConnected && (
           <div className="flex items-center gap-3">
-            <button
-              onClick={() => setIsHelpOpen(true)}
-              className="flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/30 text-white/70 hover:text-white transition-all cursor-pointer shadow-lg"
-            >
-              <HelpCircle className="w-5 h-5" /> <span className="hidden md:inline text-xs font-black uppercase">Help</span>
-            </button>
             <button
               onClick={() => setIsGuideOpen(true)}
               className="flex items-center justify-center p-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/30 text-white/70 hover:text-white transition-all cursor-pointer shadow-lg"
@@ -538,10 +529,6 @@ export default function LosslessArenaHome() {
         isOpen={isGuideOpen}
         onClose={() => setIsGuideOpen(false)}
         entryFee={entryFee || "0.50"}
-      />
-      <HelpModal
-        isOpen={isHelpOpen}
-        onClose={() => setIsHelpOpen(false)}
       />
       <OpponentHUDModal
         isOpen={!!viewingOpponent}

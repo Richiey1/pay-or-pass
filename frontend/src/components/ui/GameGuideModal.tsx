@@ -64,17 +64,13 @@ export const GameGuideModal: React.FC<GameGuideModalProps> = ({ isOpen, onClose,
             </div>
             <div className="space-y-2 pb-4">
               <h3 className="text-lg font-black text-white flex items-center gap-2">
-                <Shield className="w-4 h-4 text-orange-500" /> Enter the Arena
+                <Shield className="w-4 h-4 text-orange-500" /> ENTER THE ARENA (100% SAFE)
               </h3>
               <p className="text-xs text-white/60 leading-relaxed">
-                To join the GameFi experience, players must stake exactly <span className="text-white font-bold">{entryFee || "0.50"} CELO</span> into the secure vault. <span className="text-orange-400">This principal is never put at risk.</span>
+                Connect your wallet and click to deposit the current entry fee (<strong className="text-white">{entryFee || "0.50"} CELO</strong>) set by the Admin. Your principal is securely vaulted and automatically begins earning yield.
               </p>
               <div className="bg-white/5 p-3 rounded-xl border border-white/5 mt-2 space-y-2">
-                <p className="text-[11px] text-white/50"><strong className="text-white">Dual Yield Strategies:</strong> You have the power to choose where your principal lives.</p>
-                <ul className="text-[11px] text-white/50 list-disc pl-4 space-y-1">
-                  <li><strong className="text-white">Simulated Yield:</strong> The UI tracks the combined TVL of all simulated gladiators and applies an 8% APY.</li>
-                  <li><strong className="text-white">Moola Market:</strong> Alternatively, route your deposit natively into Moola Market to earn real decentralized yield.</li>
-                </ul>
+                <p className="text-[11px] text-white/50"><strong className="text-orange-400">LOSSLESS GUARANTEE:</strong> The principal you stake is never put at risk. You are only fighting for the accumulated DeFi yield.</p>
               </div>
             </div>
           </div>
@@ -82,49 +78,75 @@ export const GameGuideModal: React.FC<GameGuideModalProps> = ({ isOpen, onClose,
           {/* Step 2 */}
           <div className="flex gap-4">
             <div className="flex flex-col items-center mt-1">
-              <div className="w-8 h-8 rounded-full bg-yellow-500/20 border border-yellow-500/50 flex items-center justify-center text-yellow-400 font-black text-xs shrink-0">2</div>
+              <div className="w-8 h-8 rounded-full bg-red-500/20 border border-red-500/50 flex items-center justify-center text-red-400 font-black text-xs shrink-0">2</div>
               <div className="w-px h-full bg-white/5 mt-2" />
             </div>
             <div className="space-y-2 pb-4">
               <h3 className="text-lg font-black text-white flex items-center gap-2">
-                <Users className="w-4 h-4 text-yellow-500" /> View Active Gladiators
+                <Swords className="w-4 h-4 text-red-500" /> STRATEGIC COMBAT
               </h3>
               <p className="text-xs text-white/60 leading-relaxed">
-                Once inside the arena, you can view the live HUD (heads-up display) of all other players who are currently staked in the game. You can click on any gladiator in the roster to open their Target HUD and view their win/loss ratios and their total yield won.
+                Select an active opponent from the leaderboard. Instead of random outcomes, use the commit-reveal mechanism to secretly choose:
               </p>
+              <div className="bg-red-500/10 p-3 rounded-xl border border-red-500/20 mt-2 space-y-2">
+                <ul className="text-[11px] text-red-200 list-disc pl-4 space-y-1">
+                  <li><strong className="text-red-400">STRIKE:</strong> Drain opponent yield.</li>
+                  <li><strong className="text-red-400">BLOCK:</strong> Stop an incoming strike.</li>
+                  <li><strong className="text-red-400">YIELD:</strong> Grow cleanly unless hit by a strike.</li>
+                </ul>
+              </div>
             </div>
           </div>
 
           {/* Step 3 */}
           <div className="flex gap-4">
             <div className="flex flex-col items-center mt-1">
-              <div className="w-8 h-8 rounded-full bg-red-500/20 border border-red-500/50 flex items-center justify-center text-red-400 font-black text-xs shrink-0">3</div>
+              <div className="w-8 h-8 rounded-full bg-yellow-500/20 border border-yellow-500/50 flex items-center justify-center text-yellow-400 font-black text-xs shrink-0">3</div>
               <div className="w-px h-full bg-white/5 mt-2" />
             </div>
             <div className="space-y-2 pb-4">
               <h3 className="text-lg font-black text-white flex items-center gap-2">
-                <Swords className="w-4 h-4 text-red-500" /> Initiate Combat
+                <Trophy className="w-4 h-4 text-yellow-500" /> THE 70/10/10 PRIZE SPLIT
               </h3>
               <p className="text-xs text-white/60 leading-relaxed">
-                Select any opponent from the active gladiator roster. Clicking <strong>Initiate Combat</strong> engages a pseudo-random resolution.
+                When a fight resolves, the winner does not drain the entire global pool (which would kill momentum).
               </p>
-              <div className="bg-red-500/10 p-3 rounded-xl border border-red-500/20 mt-2">
-                <p className="text-[11px] text-red-200"><strong className="text-red-400">The Twist:</strong> The winner absorbs the ENTIRE accrued "Global Prize Pool" yield (both Simulated AND real Moola Market interest) that has accumulated since the last fight. The loser simply records a loss on their ledger, but their <span className="text-white font-bold">{entryFee || "0.50"} CELO</span> principal remains 100% intact.</p>
-              </div>
+              <ul className="text-[11px] text-white/50 list-disc pl-4 mt-2 space-y-1">
+                <li><strong className="text-white">70-80%</strong> goes to the fight winner.</li>
+                <li><strong className="text-white">10%</strong> returns to the Global Prize Pool to ensure it never empties.</li>
+                <li><strong className="text-white">10%</strong> funds the Seasonal Leaderboard rewards.</li>
+                <li><strong className="text-white">5%</strong> acts as a protocol sustainability fee.</li>
+              </ul>
             </div>
           </div>
 
           {/* Step 4 */}
           <div className="flex gap-4">
             <div className="flex flex-col items-center mt-1">
-              <div className="w-8 h-8 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-white/70 font-black text-xs shrink-0">4</div>
+              <div className="w-8 h-8 rounded-full bg-purple-500/20 border border-purple-500/50 flex items-center justify-center text-purple-400 font-black text-xs shrink-0">4</div>
+              <div className="w-px h-full bg-white/5 mt-2" />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-2 pb-4">
               <h3 className="text-lg font-black text-white flex items-center gap-2">
-                <LogOut className="w-4 h-4 text-white/50" /> Exit Arena
+                <Users className="w-4 h-4 text-purple-500" /> VIRAL LOOPS & FREE FIGHTS
               </h3>
               <p className="text-xs text-white/60 leading-relaxed">
-                If you decide to stop fighting, you simply click <strong>Withdraw Principal & Exit</strong>. You receive your <span className="text-white font-bold">{entryFee || "0.50"} CELO</span> back instantly and are removed from the active gladiator roster.
+                Earn 1 Free Energy fight per day by sharing your Gladiator Profile on X (Twitter) or Farcaster. Inviting a friend via a referral link grants both players a Defense Buff for 24 hours.
+              </p>
+            </div>
+          </div>
+
+          {/* Step 5 */}
+          <div className="flex gap-4">
+            <div className="flex flex-col items-center mt-1">
+              <div className="w-8 h-8 rounded-full bg-blue-500/20 border border-blue-500/50 flex items-center justify-center text-blue-400 font-black text-xs shrink-0">5</div>
+            </div>
+            <div className="space-y-2 pb-4">
+              <h3 className="text-lg font-black text-white flex items-center gap-2">
+                <Shield className="w-4 h-4 text-blue-500" /> AUTONOMOUS BOT NETWORK
+              </h3>
+              <p className="text-xs text-white/60 leading-relaxed">
+                The arena is actively populated by an autonomous volume driver bot operating as a state machine. It constantly enters the arena, stakes capital, initiates strikes, blocks, and eventually profit-takes to guarantee constant opponent availability and live combat volume 24/7!
               </p>
             </div>
           </div>
