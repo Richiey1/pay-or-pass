@@ -124,7 +124,6 @@ export const GameGuideModal: React.FC<GameGuideModalProps> = ({ isOpen, onClose,
           <div className="flex gap-4">
             <div className="flex flex-col items-center mt-1">
               <div className="w-8 h-8 rounded-full bg-purple-500/20 border border-purple-500/50 flex items-center justify-center text-purple-400 font-black text-xs shrink-0">4</div>
-              <div className="w-px h-full bg-white/5 mt-2" />
             </div>
             <div className="space-y-2 pb-4">
               <h3 className="text-lg font-black text-white flex items-center gap-2">
@@ -132,21 +131,6 @@ export const GameGuideModal: React.FC<GameGuideModalProps> = ({ isOpen, onClose,
               </h3>
               <p className="text-xs text-white/60 leading-relaxed">
                 Earn 1 Free Energy fight per day by sharing your Gladiator Profile on X (Twitter) or Farcaster. Inviting a friend via a referral link grants both players a Defense Buff for 24 hours.
-              </p>
-            </div>
-          </div>
-
-          {/* Step 5 */}
-          <div className="flex gap-4">
-            <div className="flex flex-col items-center mt-1">
-              <div className="w-8 h-8 rounded-full bg-blue-500/20 border border-blue-500/50 flex items-center justify-center text-blue-400 font-black text-xs shrink-0">5</div>
-            </div>
-            <div className="space-y-2 pb-4">
-              <h3 className="text-lg font-black text-white flex items-center gap-2">
-                <Shield className="w-4 h-4 text-blue-500" /> AUTONOMOUS BOT NETWORK
-              </h3>
-              <p className="text-xs text-white/60 leading-relaxed">
-                The arena is actively populated by an autonomous volume driver bot operating as a state machine. It constantly enters the arena, stakes capital, initiates strikes, blocks, and eventually profit-takes to guarantee constant opponent availability and live combat volume 24/7!
               </p>
             </div>
           </div>
