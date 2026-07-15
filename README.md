@@ -1,69 +1,62 @@
-# 🎮 PayOrPass (Lossless Arena) Phase 2
+# PayOrPass: The Social Lossless Arena
 
-**An Elite Retail Onboarding play. A Social GameFi app designed to abstract away DeFi yield generation behind a fun, risk-free gladiator arena.**
-
----
-
-## 🌐 Deployed Contracts (Celo Mainnet)
-
-* **PayOrPass (LosslessArena):** [`0x5644B2467Ec62e1Ef91dc44D8E5Fe545d16665Df`](https://celoscan.io/address/0x5644B2467Ec62e1Ef91dc44D8E5Fe545d16665Df)
+PayOrPass transforms passive yield generation into a highly social, risk-free competitive experience. By abstracting away complex DeFi mechanics, we provide an accessible, engaging platform for retail users to earn and compete.
 
 ---
 
-## 🎯 The Protocol Paradigm
+### 🌟 Core Concept
 
-Traditional DeFi yield products are boring and complex. **PayOrPass Phase 2** transforms passive yield generation into an interactive, risk-free game.
+At its heart, PayOrPass is a principal-protected arena. Users stake assets (CELO, USDm, USDC, etc.) to enter. The aggregated Total Value Locked (TVL) generates yield in the background. Players compete for this yield, but **the initial staked principal is never at risk and can be withdrawn at any time.**
 
-Players stake an entry fee (CELO, USDm, etc.) into a principal-protected vault. The combined TVL of all gladiators accrues yield (simulated 8% APY or real Moola Market interest). This accumulated yield is the real prize pool.
+### ⚔️ The Combat System
 
-### Strategic Combat (Commit-Reveal)
-Players don't just roll dice; they use strategy:
-- ⚔️ **Strike** (Drains opponent's yield)
-- 🛡️ **Block** (Stops a strike)
-- 📈 **Yield** (Grows cleanly)
+Battles are resolved using a secure commit-reveal system, ensuring fair play and strategic depth. In each encounter, players choose their stance:
+- **Strike:** Attempt to capture the opponent's yield.
+- **Block:** Defend against incoming strikes.
+- **Yield:** Focus on maximizing personal pool growth.
 
-### The 70/10/10 Prize Split
-When a player wins a fight, the pool isn't drained to zero:
-1. **70%** goes to the winner.
-2. **10%** stays in the Global Prize Pool.
-3. **10%** funds the Seasonal Leaderboard.
+### 💰 Sustainable Prize Distribution (70/10/10)
 
-*Your principal is NEVER at risk. You can withdraw 100% of your initial stake at any time.*
-
----
-
-## 🚀 Viral Social Loops
-
-- **Daily Free Fights:** Share your "Victory Card" on Farcaster or Twitter to earn 1 free fight energy per day.
-- **Referral Buffs:** Invite a friend to play, and BOTH of you receive a Defense Buff for 24 hours.
-- **Mega Yield Pings:** Receive MiniPay push notifications when the prize pool crosses massive thresholds.
+Unlike winner-takes-all systems that drain liquidity, PayOrPass uses a sustainable distribution model for the accrued yield:
+- **70%** awarded to the victorious player.
+- **10%** injected into the Global Prize Pool.
+- **10%** allocated to the Seasonal Leaderboard rewards.
+- *5% network fee.*
 
 ---
 
-## 🏗️ Directory Architecture
+### 📡 Live Deployment
 
-```
-PayorPass/
-├── smartcontract/             # Solidity Workspace
-│   ├── contracts/             # Core Protocol Contracts
-│   │   └── PayOrPass.sol      # LosslessArena, commit-reveal logic
-│   └── hardhat.config.ts      # TypeScript Hardhat config
-│
-└── frontend/                  # NextJS Web3 Game Client
-    ├── src/
-    │   ├── app/
-    │   │   └── page.tsx       # Stake & Enter, Combat UI, Leaderboards
-    └── package.json           # Frontend packages
-```
+PayOrPass is deployed and active on the Celo Mainnet.
+
+**LosslessArena Contract:**
+[`0x6B667D149a8B0AF00C3880fE0f09a6D9D8Cb62C7`](https://celoscan.io/address/0x6B667D149a8B0AF00C3880fE0f09a6D9D8Cb62C7)
 
 ---
 
-## 🧪 Quickstart
+### 💻 Development Setup
 
-Navigate to `frontend`, install requirements, and run the Next.js development server:
-```bash
-cd frontend
-npm install
-npm run dev
-```
-Open [http://localhost:3000](http://localhost:3000) on a Web3 browser to play locally!
+To run the application locally:
+
+1.  **Clone and install dependencies:**
+    ```bash
+    cd frontend
+    npm install
+    ```
+
+2.  **Start the development server:**
+    ```bash
+    npm run dev
+    ```
+
+3.  **Access the application:**
+    Open `http://localhost:3000` in a Web3-enabled browser.
+
+---
+
+### 📱 MiniPay Integration
+
+PayOrPass is fully optimized for the Celo MiniPay environment, featuring:
+- Seamless auto-connection.
+- CIP-64 fee abstraction (users pay gas in stablecoins).
+- Responsive, mobile-first UI components tailored for the MiniPay viewport.
