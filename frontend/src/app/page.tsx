@@ -123,7 +123,7 @@ export default function LosslessArenaHome() {
           <img 
             src="/payorpass-logo.png" 
             alt="PayorPass Logo" 
-            className="h-24 w-auto object-contain" 
+            className="h-14 sm:h-16 md:h-24 w-auto object-contain" 
           />
         </div>
         
@@ -170,7 +170,7 @@ export default function LosslessArenaHome() {
               <Info className="w-5 h-5" />
             </button>
 
-            <h1 className="text-7xl md:text-9xl font-black tracking-tighter uppercase italic leading-[0.8] text-transparent bg-clip-text bg-gradient-to-br from-white to-red-600">
+            <h1 className="text-6xl sm:text-7xl md:text-9xl font-black tracking-tighter uppercase italic leading-[0.8] text-transparent bg-clip-text bg-gradient-to-br from-white to-red-600">
               PAYOR<br/>PASS
             </h1>
             
@@ -181,7 +181,7 @@ export default function LosslessArenaHome() {
             {!isMiniPay ? (
               <button
                 onClick={() => open()}
-                className="w-full max-w-md bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 text-white font-black p-5 rounded-2xl transition-all text-xl shadow-[0_0_50px_rgba(220,38,38,0.4)] hover:scale-105 active:scale-95 cursor-pointer uppercase tracking-widest flex items-center justify-center gap-3"
+                className="w-full max-w-md bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 text-white font-black p-4 sm:p-5 rounded-xl sm:rounded-2xl transition-all text-lg sm:text-xl shadow-[0_0_50px_rgba(220,38,38,0.4)] hover:scale-105 active:scale-95 cursor-pointer uppercase tracking-widest flex items-center justify-center gap-2 sm:gap-3"
               >
                 <Zap className="w-6 h-6 animate-bounce" /> START GAME
               </button>
@@ -231,10 +231,10 @@ export default function LosslessArenaHome() {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
               
               {/* My Gladiator Profile (4 cols) */}
-              <div className="lg:col-span-4 bg-gradient-to-b from-red-900/20 to-black border border-red-500/30 rounded-3xl p-8 relative overflow-hidden flex flex-col items-center text-center">
+              <div className="lg:col-span-4 bg-gradient-to-b from-red-900/20 to-black border border-red-500/30 rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 relative overflow-hidden flex flex-col items-center text-center">
                 <div className="absolute top-0 w-full h-1 bg-gradient-to-r from-transparent via-red-500 to-transparent" />
                 
-                <h2 className="text-2xl font-black italic tracking-widest mb-6">MY GLADIATOR</h2>
+                <h2 className="text-xl sm:text-2xl font-black italic tracking-widest mb-4 sm:mb-6">MY GLADIATOR</h2>
                 
                 {isLoading ? (
                   <div className="space-y-5 w-full mt-4 animate-pulse">
@@ -391,8 +391,8 @@ export default function LosslessArenaHome() {
               </div>
 
               {/* The Arena (8 cols) */}
-              <div className="lg:col-span-8 bg-black/40 border border-white/10 rounded-3xl p-8 backdrop-blur-md">
-                <h2 className="text-2xl font-black italic tracking-widest mb-6 flex items-center gap-2">
+              <div className="lg:col-span-8 bg-black/40 border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 backdrop-blur-md">
+                <h2 className="text-xl sm:text-2xl font-black italic tracking-widest mb-4 sm:mb-6 flex items-center gap-2">
                   <Crosshair className="w-6 h-6 text-red-500" /> SELECT OPPONENT
                 </h2>
                 
@@ -435,7 +435,7 @@ export default function LosslessArenaHome() {
                               }`}
                             >
                               <div className="flex items-center gap-3">
-                                <div className={`w-10 h-10 rounded-full overflow-hidden flex items-center justify-center border-2 transition-all ${isSelected ? 'border-red-500 bg-red-500/20 animate-pulse' : 'border-white/10 bg-white/5'}`}>
+                                <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full overflow-hidden flex items-center justify-center border-2 transition-all shrink-0 ${isSelected ? 'border-red-500 bg-red-500/20 animate-pulse' : 'border-white/10 bg-white/5'}`}>
                                   <img
                                     src={`https://api.dicebear.com/7.x/bottts/svg?seed=${playerAddr}`}
                                     alt="Gladiator"
