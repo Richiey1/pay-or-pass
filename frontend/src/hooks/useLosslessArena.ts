@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { useAccount, useReadContract, useWriteContract, useBalance } from "wagmi";
+import { useAccount, useReadContract, useWriteContract, useBalance, usePublicClient } from "wagmi";
 import { formatEther, parseEther, keccak256, encodePacked } from "viem";
 import { readContract } from "wagmi/actions";
 import { useConfig } from "wagmi";
@@ -22,6 +22,7 @@ export type TxState = "idle" | "preparing" | "broadcasting" | "confirming" | "co
 export function useLosslessArena() {
   const { address, isConnected } = useAccount();
   const config = useConfig();
+  const publicClient = usePublicClient();
   const [selectedOpponent, setSelectedOpponent] = useState<string | null>(null);
   const { feeCurrency } = useCeloFeeCurrency();
   
@@ -146,8 +147,13 @@ export function useLosslessArena() {
             args: [CONTRACT_ADDRESS, stakeVal],
             ...(feeCurrency ? { feeCurrency } : {}),
           } as any);
-          // Simple wait for approve
-          await new Promise(r => setTimeout(r, 2000)); 
+          // Wait for approval confirmation
+          if (publicClient) {
+            setTxState("confirming");
+            await publicClient.waitForTransactionReceipt({ hash: approveHash });
+          } else {
+            await new Promise(r => setTimeout(r, 2000));
+          }
         }
       }
 
