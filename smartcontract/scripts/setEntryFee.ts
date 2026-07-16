@@ -3,11 +3,14 @@ dotenv.config();
 
 import { ethers } from "hardhat";
 
-const LOSSLESS_ARENA_ADDRESS = "0x9b932E9B16202760F4e3173B9Dbe060924857329";
+const LOSSLESS_ARENA_ADDRESS = "0x6B667D149a8B0AF00C3880fE0f09a6D9D8Cb62C7";
 const LOSSLESS_ARENA_ABI = [
-  "function setEntryFee(uint256 _entryFee) external",
-  "function entryFee() view returns (uint256)"
+  "function setTokenSupport(address token, bool isSupported, uint256 fee) external",
+  "function entryFees(address) view returns (uint256)"
 ];
+
+const CELO_ERC20 = "0x471EcE3750Da237f93B8E339c536989b8978a438";
+const USDM_TOKEN = "0x765DE816845861e75A25fCA122bb6898B8B1282a";
 
 async function main() {
   const funderKey = process.env.ACCOUNT_PRIVATE_KEY;
@@ -20,17 +23,19 @@ async function main() {
 
   const contract = new ethers.Contract(LOSSLESS_ARENA_ADDRESS, LOSSLESS_ARENA_ABI, deployerSigner);
 
-  const currentFee = await contract.entryFee();
-  console.log(`Current Entry Fee: ${ethers.formatEther(currentFee)} CELO`);
-
-  const newFee = ethers.parseEther("0.5"); // Lowering to 0.5 CELO
-  console.log(`Setting new Entry Fee to 0.5 CELO...`);
-
-  const tx = await contract.setEntryFee(newFee);
-  console.log(`Transaction broadcasted: ${tx.hash}`);
-
-  await tx.wait();
-  console.log(`✅ Entry Fee successfully updated to 0.5 CELO!`);
+  const newFee = ethers.parseEther("0.005"); 
+  
+  console.log(`Setting new Entry Fee to 0.005 for USDm...`);
+  const tx1 = await contract.setTokenSupport(USDM_TOKEN, true, newFee);
+  console.log(`Transaction broadcasted: ${tx1.hash}`);
+  await tx1.wait();
+  console.log(`✅ USDm Entry Fee successfully updated to 0.005!`);
+  
+  console.log(`Setting new Entry Fee to 0.005 for CELO...`);
+  const tx2 = await contract.setTokenSupport(CELO_ERC20, true, newFee);
+  console.log(`Transaction broadcasted: ${tx2.hash}`);
+  await tx2.wait();
+  console.log(`✅ CELO Entry Fee successfully updated to 0.005!`);
 }
 
 main().catch((error) => {
