@@ -150,7 +150,10 @@ export function useLosslessArena() {
           // Wait for approval confirmation
           if (publicClient) {
             setTxState("confirming");
-            await publicClient.waitForTransactionReceipt({ hash: approveHash });
+            const receipt = await publicClient.waitForTransactionReceipt({ hash: approveHash });
+            if (receipt.status !== 'success') {
+              throw new Error("Approval transaction reverted on-chain");
+            }
           } else {
             await new Promise(r => setTimeout(r, 2000));
           }
