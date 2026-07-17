@@ -10,6 +10,7 @@ interface TransactionModalProps {
   activeAction: "enter" | "fight" | "exit" | null;
   entryFee: string;
   usdRate?: number; // CELO to USD conversion rate
+  selectedToken?: { symbol: string; isStable?: boolean };
   onClose: () => void;
 }
 
@@ -20,6 +21,7 @@ export function TransactionModal({
   activeAction,
   entryFee,
   usdRate = 0.62, // Default static rate if not fetched
+  selectedToken,
   onClose,
 }: TransactionModalProps) {
   const [mounted, setMounted] = useState(false);
@@ -46,9 +48,14 @@ export function TransactionModal({
   const getActionAmount = () => {
     if (activeAction === "enter") {
       const feeNum = parseFloat(entryFee);
+      const symbol = selectedToken?.symbol || "CELO";
+      const usdValue = selectedToken?.isStable 
+        ? `$${feeNum.toFixed(4)} USD` 
+        : `$${(feeNum * usdRate).toFixed(2)} USD`;
+      
       return {
-        celo: `${feeNum.toFixed(4)} CELO`,
-        usd: `$${(feeNum * usdRate).toFixed(2)} USD`,
+        tokenAmount: `${feeNum.toFixed(4)} ${symbol}`,
+        usd: usdValue,
       };
     }
     return null;
@@ -69,7 +76,7 @@ export function TransactionModal({
         <div className="text-center space-y-2">
           <h3 className="text-lg font-black tracking-widest uppercase text-white flex items-center justify-center gap-2">
             <Cpu className="w-5 h-5 text-red-500 animate-pulse" />
-            Web3 Transaction HUD
+            Transaction HUD
           </h3>
           <p className="text-xs text-red-400 font-bold uppercase tracking-widest">
             {getActionName()}
@@ -81,7 +88,7 @@ export function TransactionModal({
           <div className="bg-black/40 border border-white/5 rounded-2xl p-4 flex justify-between items-center text-sm">
             <div>
               <span className="text-[10px] text-white/40 font-black uppercase tracking-wider block">Estimated Stake</span>
-              <span className="font-mono font-bold text-white text-base">{amountDetails.celo}</span>
+              <span className="font-mono font-bold text-white text-base">{amountDetails.tokenAmount}</span>
             </div>
             <ArrowRight className="text-red-500/50 w-4 h-4" />
             <div className="text-right">

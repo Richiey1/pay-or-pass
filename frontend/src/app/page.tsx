@@ -623,6 +623,7 @@ export default function LosslessArenaHome() {
         activeAction={activeAction}
         entryFee={entryFee}
         usdRate={celoUsdRate}
+        selectedToken={selectedToken}
         onClose={() => setTxState("idle")}
       />
       <GameGuideModal
