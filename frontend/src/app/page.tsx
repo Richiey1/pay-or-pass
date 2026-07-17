@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useDisconnect, useWaitForTransactionReceipt, useBalance } from "wagmi";
-import { formatUnits } from "viem";
+import { useDisconnect, useWaitForTransactionReceipt, useBalance, useReadContract } from "wagmi";
+import { formatUnits, erc20Abi } from "viem";
 
 import { useAppKit } from "@reown/appkit/react";
 import AdminPanel from "@/components/AdminPanel";
@@ -82,6 +82,10 @@ export default function LosslessArenaHome() {
     entryFee,
     isAdmin,
     isInArena,
+    myWins,
+    myLosses,
+    myYieldWon,
+    selectedOpponent,
     myRank,
     getPlayerRank,
     arenaPlayers,
@@ -107,12 +111,26 @@ export default function LosslessArenaHome() {
 
   const isNativeToken = selectedToken.address === "0x471EcE3750Da237f93B8E339c536989b8978a438" || selectedToken.address === "0x0000000000000000000000000000000000000000";
 
-  const { data: tokenBalanceData } = useBalance({
+  const { data: nativeBalanceData } = useBalance({
     address: address,
-    token: isNativeToken ? undefined : selectedToken.address as `0x${string}`,
+    query: {
+      enabled: isNativeToken,
+    }
   });
 
-  const formattedTokenBalance = tokenBalanceData ? formatUnits(tokenBalanceData.value, selectedToken.decimals) : "0.0";
+  const { data: erc20BalanceData } = useReadContract({
+    address: selectedToken.address as `0x${string}`,
+    abi: erc20Abi,
+    functionName: 'balanceOf',
+    args: address ? [address] : undefined,
+    query: {
+      enabled: !isNativeToken && !!address,
+    }
+  });
+
+  const formattedTokenBalance = isNativeToken 
+    ? (nativeBalanceData ? formatUnits(nativeBalanceData.value, selectedToken.decimals) : "0.0")
+    : (erc20BalanceData ? formatUnits(erc20BalanceData as bigint, selectedToken.decimals) : "0.0");
 
   // Watch for transaction confirmations
   const { data: txReceipt, isSuccess: txConfirmed } = useWaitForTransactionReceipt({
