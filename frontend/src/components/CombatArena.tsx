@@ -94,18 +94,15 @@ export default function CombatArena({
   if (isResolved) statusText = "FIGHT RESOLVED";
 
   return (
-    <div className="w-full max-w-4xl mx-auto bg-gray-900 border-2 border-red-900/50 rounded-xl overflow-hidden shadow-[0_0_50px_rgba(220,38,38,0.15)] font-mono mt-8">
+    <div className="w-full max-w-4xl mx-auto bg-black/50 backdrop-blur-xl border border-white/10 rounded-3xl overflow-hidden shadow-2xl font-mono mt-8">
       {/* Header */}
-      <div className="bg-gradient-to-r from-red-950 via-gray-900 to-blue-950 p-6 text-center border-b border-gray-800 relative">
-        <button onClick={onClearOpponent} className="absolute left-6 top-6 text-white/50 hover:text-white text-xs">
-          ← BACK
+      <div className="p-6 text-center border-b border-white/10 relative">
+        <button onClick={onClearOpponent} className="absolute left-6 top-6 text-white/50 hover:text-white text-xs transition-colors">
+          ← BACK TO LOBBY
         </button>
-        <h2 className="text-3xl font-black text-white tracking-widest flex items-center justify-center gap-4">
-          <Skull className="text-red-500" size={32} />
-          THE ARENA
-          <Skull className="text-blue-500" size={32} />
+        <h2 className="text-3xl font-black text-white tracking-widest uppercase">
+          COMBAT ARENA
         </h2>
-        <div className="text-gray-400 mt-2 text-sm tracking-widest">PHASE 2 COMBAT PROTOCOL</div>
       </div>
 
       <div className="p-8">
@@ -136,8 +133,8 @@ export default function CombatArena({
         </div>
 
         {/* Combat Controls */}
-        <div className="bg-gray-950 p-6 rounded-lg border border-gray-800">
-          <h3 className="text-center text-gray-400 mb-6 font-bold tracking-widest">
+        <div className="bg-black/40 p-6 rounded-2xl border border-white/5">
+          <h3 className="text-center text-white/50 mb-6 font-bold tracking-widest uppercase">
             {isReadyToReveal ? "REVEAL YOUR TACTIC" : isWaiting ? "ENEMY IS DECIDING..." : "SELECT YOUR TACTIC"}
           </h3>
           
@@ -150,8 +147,8 @@ export default function CombatArena({
                 disabled:opacity-50 disabled:cursor-not-allowed`}
             >
               <Zap className={choice === 1 ? 'text-red-500' : 'text-gray-500'} size={32} />
-              <div className={`font-bold ${choice === 1 ? 'text-red-400' : 'text-gray-500'}`}>STRIKE</div>
-              <div className="text-xs text-gray-600 text-center">Beats Yield<br/>Loses to Block</div>
+              <div className={`font-bold ${choice === 1 ? 'text-red-400' : 'text-gray-400'}`}>STRIKE</div>
+              <div className="text-xs text-gray-500 text-center">Aggressive Move.<br/>Defeats Yield, blocked by Block.</div>
             </button>
 
             <button 
@@ -162,8 +159,8 @@ export default function CombatArena({
                 disabled:opacity-50 disabled:cursor-not-allowed`}
             >
               <Shield className={choice === 2 ? 'text-blue-500' : 'text-gray-500'} size={32} />
-              <div className={`font-bold ${choice === 2 ? 'text-blue-400' : 'text-gray-500'}`}>BLOCK</div>
-              <div className="text-xs text-gray-600 text-center">Beats Strike<br/>Loses to Yield</div>
+              <div className={`font-bold ${choice === 2 ? 'text-blue-400' : 'text-gray-400'}`}>BLOCK</div>
+              <div className="text-xs text-gray-500 text-center">Defensive Move.<br/>Defeats Strike, loses to Yield.</div>
             </button>
 
             <button 
@@ -174,8 +171,8 @@ export default function CombatArena({
                 disabled:opacity-50 disabled:cursor-not-allowed`}
             >
               <TrendingUp className={choice === 3 ? 'text-green-500' : 'text-gray-500'} size={32} />
-              <div className={`font-bold ${choice === 3 ? 'text-green-400' : 'text-gray-500'}`}>YIELD</div>
-              <div className="text-xs text-gray-600 text-center">Beats Block<br/>Loses to Strike</div>
+              <div className={`font-bold ${choice === 3 ? 'text-green-400' : 'text-gray-400'}`}>YIELD</div>
+              <div className="text-xs text-gray-500 text-center">Greedy Move.<br/>Defeats Block, crushed by Strike.</div>
             </button>
           </div>
 
