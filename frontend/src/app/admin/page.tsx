@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
-import { parseEther, parseAbi } from 'viem';
+import { parseEther, parseUnits, parseAbi } from 'viem';
 
 const PAYORPASS_ADDRESS = "0x6B667D149a8B0AF00C3880fE0f09a6D9D8Cb62C7";
 const CELO_ERC20 = "0x471EcE3750Da237f93B8E339c536989b8978a438";
@@ -54,7 +54,8 @@ export default function AdminConsole() {
   };
 
   const handleSetToken = () => {
-    writeContract({ address: PAYORPASS_ADDRESS, abi: PAYORPASS_ABI, functionName: 'setTokenSupport', args: [tokenAddress as `0x${string}`, true, parseEther(minEntry)] });
+    const isStable = tokenAddress.toLowerCase() === "0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e".toLowerCase() || tokenAddress.toLowerCase() === "0xcebA9300f2b948710d2653dD7B07f33A8B32118C".toLowerCase();
+    writeContract({ address: PAYORPASS_ADDRESS, abi: PAYORPASS_ABI, functionName: 'setTokenSupport', args: [tokenAddress as `0x${string}`, true, parseUnits(minEntry, isStable ? 6 : 18)] });
   };
 
   const handleSetDist = () => {

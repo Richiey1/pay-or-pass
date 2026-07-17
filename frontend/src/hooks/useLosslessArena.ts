@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useAccount, useReadContract, useWriteContract, useBalance, usePublicClient } from "wagmi";
-import { formatEther, parseEther, keccak256, encodePacked } from "viem";
+import { formatEther, parseEther, parseUnits, keccak256, encodePacked } from "viem";
 import { readContract } from "wagmi/actions";
 import { useConfig } from "wagmi";
 import { LOSSLESS_ARENA_ABI, CONTRACT_ADDRESS, FUNCTION_NAMES } from "@/lib/constants/contracts";
@@ -123,7 +123,8 @@ export function useLosslessArena() {
       setTxState("preparing");
       setTxError(null);
       
-      const stakeVal = parseEther(customAmount || "10");
+      const isStable = token.toLowerCase() === "0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e".toLowerCase() || token.toLowerCase() === "0xcebA9300f2b948710d2653dD7B07f33A8B32118C".toLowerCase();
+      const stakeVal = parseUnits(customAmount || "10", isStable ? 6 : 18);
       if (token === "0x0000000000000000000000000000000000000000" && balanceData && balanceData.value < stakeVal) {
         throw new Error(`Insufficient CELO balance. Required: ${formatEther(stakeVal)} CELO, Available: ${formattedBalance} CELO`);
       }
