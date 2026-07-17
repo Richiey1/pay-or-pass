@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import { useAccount, useReadContract, useWriteContract, useBalance, usePublicClient } from "wagmi";
-import { formatEther, parseEther, parseUnits, keccak256, encodePacked } from "viem";
+import { useAccount, useReadContract, useWriteContract, useBalance, usePublicClient, useReadContracts } from "wagmi";
+import { formatUnits, parseUnits, keccak256, encodePacked, formatEther } from "viem";
 import { readContract } from "wagmi/actions";
 import { useConfig } from "wagmi";
 import { LOSSLESS_ARENA_ABI, CONTRACT_ADDRESS, FUNCTION_NAMES } from "@/lib/constants/contracts";
@@ -19,7 +19,7 @@ export interface Gladiator {
 
 export type TxState = "idle" | "preparing" | "broadcasting" | "confirming" | "confirmed" | "error";
 
-export function useLosslessArena() {
+export function useLosslessArena(tokenAddress: string = "0x471EcE3750Da237f93B8E339c536989b8978a438", tokenDecimals: number = 18) {
   const { address, isConnected } = useAccount();
   const config = useConfig();
   const publicClient = usePublicClient();
@@ -50,7 +50,7 @@ export function useLosslessArena() {
     address: CONTRACT_ADDRESS as `0x${string}`,
     abi: LOSSLESS_ARENA_ABI,
     functionName: FUNCTION_NAMES.GET_CURRENT_PRIZE_POOL,
-    args: ["0x471EcE3750Da237f93B8E339c536989b8978a438"],
+    args: [tokenAddress as `0x${string}`],
   });
   
   const { data: activePlayersData, isLoading: isLoadingPlayers, refetch: refetchPlayers } = useReadContract({
@@ -86,7 +86,7 @@ export function useLosslessArena() {
     address: CONTRACT_ADDRESS as `0x${string}`,
     abi: LOSSLESS_ARENA_ABI,
     functionName: FUNCTION_NAMES.ENTRY_FEE,
-    args: ["0x471EcE3750Da237f93B8E339c536989b8978a438"], // CELO_ERC20 in PayOrPass
+    args: [tokenAddress as `0x${string}`],
   });
 
   const { data: isAdminData } = useReadContract({
@@ -97,10 +97,10 @@ export function useLosslessArena() {
   });
 
   // Formatted/Derived states
-  const totalStake = totalStakeData ? formatEther(totalStakeData as bigint) : "0.0";
-  const currentPrize = currentPrizeData ? formatEther(currentPrizeData as bigint) : "0.000";
+  const totalStake = totalStakeData ? formatUnits(totalStakeData as bigint, tokenDecimals) : "0.0";
+  const currentPrize = currentPrizeData ? formatUnits(currentPrizeData as bigint, tokenDecimals) : "0.000";
   const activePlayers = Array.from(new Set(((activePlayersData as string[]) || []).map(a => a.toLowerCase())));
-  const entryFee = entryFeeData ? formatEther(entryFeeData as bigint) : "";
+  const entryFee = entryFeeData ? formatUnits(entryFeeData as bigint, tokenDecimals) : "";
   
   const { data: ownerData } = useReadContract({
     address: CONTRACT_ADDRESS as `0x${string}`,
@@ -114,11 +114,50 @@ export function useLosslessArena() {
   const isLoading = isLoadingStake || isLoadingPrize || isLoadingPlayers || isLoadingGladiator;
 
   
+  const { data: allGladiatorsData } = useReadContracts({
+    contracts: activePlayers.map((player) => ({
+      address: CONTRACT_ADDRESS as `0x${string}`,
+      abi: LOSSLESS_ARENA_ABI,
+      functionName: FUNCTION_NAMES.GLADIATORS,
+      args: [player as `0x${string}`],
+    })),
+    query: {
+      enabled: activePlayers.length > 0,
+    }
+  });
+
+  const arenaPlayers = activePlayers.filter((address, index) => {
+    const data = allGladiatorsData?.[index]?.result as any;
+    if (!data) return false;
+    const stakeToken = data[7];
+    // if native, token is 0x471..., but in contract is it 0x471...? Yes, or 0x00...
+    const isTokenMatch = stakeToken.toLowerCase() === tokenAddress.toLowerCase() || 
+      (tokenAddress.toLowerCase() === "0x471ece3750da237f93b8e339c536989b8978a438" && stakeToken === "0x0000000000000000000000000000000000000000");
+    return isTokenMatch;
+  });
+
+  // Calculate ranks based on Yield Won for arenaPlayers
+  const arenaPlayersWithData = arenaPlayers.map((address) => {
+    const idx = activePlayers.indexOf(address);
+    const data = allGladiatorsData?.[idx]?.result as any;
+    const yieldWon = data ? parseFloat(formatUnits(data[2], tokenDecimals)) : 0;
+    const wins = data ? Number(data[3]) : 0;
+    const losses = data ? Number(data[4]) : 0;
+    return { address, yieldWon, wins, losses };
+  }).sort((a, b) => b.yieldWon - a.yieldWon);
+
+  const getPlayerRank = (addr: string) => {
+    const index = arenaPlayersWithData.findIndex(p => p.address.toLowerCase() === addr.toLowerCase());
+    return index >= 0 ? index + 1 : 0;
+  };
+
+  const myRank = address ? getPlayerRank(address) : 0;
+
   const myGladiator = myGladiatorData as any;
   const isInArena = myGladiator ? myGladiator[6] : false; // isActive field
   const myWins = myGladiator ? Number(myGladiator[3]) : 0;
   const myLosses = myGladiator ? Number(myGladiator[4]) : 0;
-  const myYieldWon = myGladiator ? formatEther(myGladiator[2]) : "0.0";
+  const myYieldWon = myGladiator ? formatUnits(myGladiator[2], tokenDecimals) : "0.0";
 
   // Contract Writes
   const { writeContractAsync } = useWriteContract();
@@ -350,6 +389,10 @@ export function useLosslessArena() {
     myYieldWon,
     selectedOpponent,
     setSelectedOpponent,
+    myRank,
+    getPlayerRank,
+    arenaPlayers,
+    arenaPlayersWithData,
     currentFightId,
     currentFightData,
     enterArena,

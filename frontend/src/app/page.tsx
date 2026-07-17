@@ -82,10 +82,10 @@ export default function LosslessArenaHome() {
     entryFee,
     isAdmin,
     isInArena,
-    myWins,
-    myLosses,
-    myYieldWon,
-    selectedOpponent,
+    myRank,
+    getPlayerRank,
+    arenaPlayers,
+    arenaPlayersWithData,
     setSelectedOpponent,
     currentFightId,
     currentFightData,
@@ -103,7 +103,7 @@ export default function LosslessArenaHome() {
     txHash,
     activeAction,
     isLoading,
-  } = useLosslessArena();
+  } = useLosslessArena(selectedToken.address, selectedToken.decimals);
 
   const isNativeToken = selectedToken.address === "0x471EcE3750Da237f93B8E339c536989b8978a438" || selectedToken.address === "0x0000000000000000000000000000000000000000";
 
@@ -243,7 +243,7 @@ export default function LosslessArenaHome() {
                 {isLoading ? (
                   <div className="h-8 md:h-10 w-24 md:w-32 bg-white/10 rounded animate-pulse my-1" />
                 ) : (
-                  <div className="text-xl md:text-4xl font-black text-red-500">{parseFloat(currentPrize).toFixed(4)} <span className="text-sm md:text-xl text-red-500/50">CELO</span></div>
+                  <div className="text-xl md:text-4xl font-black text-red-500">{parseFloat(currentPrize).toFixed(4)} <span className="text-sm md:text-xl text-red-500/50">{selectedToken.symbol}</span></div>
                 )}
                 <div className="text-[9px] md:text-xs text-white/30 mt-1">Accruing at 8% APY (Est.)</div>
               </div>
@@ -253,7 +253,7 @@ export default function LosslessArenaHome() {
                 {isLoading ? (
                   <div className="h-8 md:h-10 w-24 md:w-32 bg-white/10 rounded animate-pulse my-1" />
                 ) : (
-                  <div className="text-xl md:text-4xl font-black text-white">{parseFloat(totalStake).toFixed(4)} <span className="text-sm md:text-xl text-white/50">CELO</span></div>
+                  <div className="text-xl md:text-4xl font-black text-white">{parseFloat(totalStake).toFixed(4)} <span className="text-sm md:text-xl text-white/50">{selectedToken.symbol}</span></div>
                 )}
                 <div className="text-[9px] md:text-xs text-white/30 mt-1">100% Principal Safe</div>
               </div>
@@ -413,7 +413,9 @@ export default function LosslessArenaHome() {
                         alt="My Gladiator"
                         className="w-full h-full object-cover"
                       />
-                      <div className="absolute -bottom-2 -right-2 bg-red-600 text-[10px] font-black px-2 py-1 rounded border border-black z-10">ACTIVE</div>
+                      <div className="absolute -bottom-2 -right-2 bg-red-600 text-[10px] font-black px-2 py-1 rounded border border-black z-10 flex gap-1 items-center">
+                        ACTIVE <span className="text-yellow-300">#{myRank || "-"}</span>
+                      </div>
                     </div>
                     
                     <div className="flex items-center justify-center gap-2 text-white/50 text-xs font-mono -mt-4 mb-2">
@@ -452,7 +454,7 @@ export default function LosslessArenaHome() {
                       </div>
                       <div className="bg-black/50 p-3 rounded-xl border border-white/10">
                         <div className="text-[10px] text-white/50 font-black">YIELD WON</div>
-                        <div className="text-xl font-black text-emerald-400">{myYieldWon}</div>
+                        <div className="text-xl font-black text-emerald-400">{parseFloat(myYieldWon).toFixed(4)} {selectedToken.symbol}</div>
                       </div>
                     </div>
 
@@ -506,14 +508,14 @@ export default function LosslessArenaHome() {
                             </div>
                           ))}
                         </div>
-                      ) : activePlayers.length === 0 ? (
-                        <div className="text-white/40 italic py-10 text-center">The arena is empty. Be the first to enter.</div>
-                      ) : activePlayers.length === 1 && address && activePlayers[0].toLowerCase() === address.toLowerCase() ? (
-                        <div className="text-white/40 italic py-10 text-center">You are currently the only player in the arena. Waiting for opponents to enter...</div>
+                      ) : arenaPlayers.length === 0 ? (
+                        <div className="text-white/40 italic py-10 text-center">The {selectedToken.symbol} arena is empty. Be the first to enter.</div>
+                      ) : arenaPlayers.length === 1 && address && arenaPlayers[0].toLowerCase() === address.toLowerCase() ? (
+                        <div className="text-white/40 italic py-10 text-center">You are currently the only player in the {selectedToken.symbol} arena. Waiting for opponents to enter...</div>
                       ) : (
                         <>
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {activePlayers
+                            {arenaPlayers
                               .filter(playerAddr => playerAddr.toLowerCase() !== address?.toLowerCase())
                               .slice((currentPage - 1) * 6, currentPage * 6)
                               .map((playerAddr) => {
@@ -537,11 +539,13 @@ export default function LosslessArenaHome() {
                                       />
                                     </div>
                                     <div>
-                                      <div className="font-mono text-sm font-bold text-white/80">
-                                        {playerAddr.slice(0,6)}...{playerAddr.slice(-4)}
-                                      </div>
-                                      <div className="text-[10px] text-white/40 font-black tracking-widest mt-1">GLADIATOR</div>
+                                      <div className="font-bold text-sm text-white/90">
+                                      {playerAddr.slice(0, 6)}...{playerAddr.slice(-4)}
                                     </div>
+                                    <div className="text-[10px] text-white/40 font-black tracking-widest mt-1 flex items-center gap-1">
+                                      GLADIATOR <span className="text-yellow-500">#{getPlayerRank(playerAddr) || "-"}</span>
+                                    </div>
+                                  </div>
                                   </div>
                                   <div>
                                     <span className="text-[9px] font-black text-white/30 px-2.5 py-1 rounded bg-white/5 border border-white/5 uppercase tracking-widest group-hover:text-red-500 group-hover:border-red-500/30 transition-all">
@@ -553,7 +557,7 @@ export default function LosslessArenaHome() {
                             })}
                           </div>
                           
-                          {activePlayers.filter(p => p.toLowerCase() !== address?.toLowerCase()).length > 6 && (
+                          {arenaPlayers.filter(p => p.toLowerCase() !== address?.toLowerCase()).length > 6 && (
                             <div className="flex justify-center items-center gap-4 mt-6">
                               <button 
                                 onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
@@ -563,11 +567,11 @@ export default function LosslessArenaHome() {
                                 Prev
                               </button>
                               <span className="text-white/50 text-xs font-black">
-                                {currentPage} / {Math.ceil(activePlayers.filter(p => p.toLowerCase() !== address?.toLowerCase()).length / 6)}
+                                {currentPage} / {Math.ceil(arenaPlayers.filter(p => p.toLowerCase() !== address?.toLowerCase()).length / 6)}
                               </span>
                               <button 
-                                onClick={() => setCurrentPage(prev => Math.min(Math.ceil(activePlayers.filter(p => p.toLowerCase() !== address?.toLowerCase()).length / 6), prev + 1))}
-                                disabled={currentPage === Math.ceil(activePlayers.filter(p => p.toLowerCase() !== address?.toLowerCase()).length / 6)}
+                                onClick={() => setCurrentPage(prev => Math.min(Math.ceil(arenaPlayers.filter(p => p.toLowerCase() !== address?.toLowerCase()).length / 6), prev + 1))}
+                                disabled={currentPage === Math.ceil(arenaPlayers.filter(p => p.toLowerCase() !== address?.toLowerCase()).length / 6)}
                                 className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-xs font-black uppercase text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all"
                               >
                                 Next
@@ -583,7 +587,7 @@ export default function LosslessArenaHome() {
 
             </div>
             
-            <Leaderboard activePlayers={activePlayers} />
+            <Leaderboard playersData={arenaPlayersWithData} isLoading={isLoading} tokenSymbol={selectedToken.symbol} />
             
             {/* Owner Governance Admin Console */}
             {isAdmin && (

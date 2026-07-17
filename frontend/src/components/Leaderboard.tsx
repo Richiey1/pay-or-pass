@@ -1,35 +1,25 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Trophy, Swords, Medal, TrendingUp } from 'lucide-react';
-import { useReadContracts } from 'wagmi';
-import { formatEther } from 'viem';
-import { LOSSLESS_ARENA_ABI, CONTRACT_ADDRESS, FUNCTION_NAMES } from '@/lib/constants/contracts';
 
-interface LeaderboardProps {
-  activePlayers: string[];
+interface PlayerData {
+  address: string;
+  yieldWon: number;
+  wins: number;
+  losses: number;
 }
 
-export function Leaderboard({ activePlayers }: LeaderboardProps) {
+interface LeaderboardProps {
+  playersData: PlayerData[];
+  isLoading: boolean;
+  tokenSymbol: string;
+}
+
+export function Leaderboard({ playersData, isLoading, tokenSymbol }: LeaderboardProps) {
   const [activeTab, setActiveTab] = useState<'yield' | 'wins'>('yield');
 
-  const { data: gladiatorData, isLoading } = useReadContracts({
-    contracts: activePlayers.map((player) => ({
-      address: CONTRACT_ADDRESS as `0x${string}`,
-      abi: LOSSLESS_ARENA_ABI,
-      functionName: FUNCTION_NAMES.GLADIATORS,
-      args: [player as `0x${string}`],
-    })),
-    query: {
-      enabled: activePlayers.length > 0,
-    }
-  });
-
-  const players = activePlayers.map((address, index) => {
-    const data = gladiatorData?.[index]?.result as any;
-    const yieldWon = data ? parseFloat(formatEther(data[2])) : 0;
-    const wins = data ? Number(data[3]) : 0;
-    const losses = data ? Number(data[4]) : 0;
-    const winRate = (wins + losses) > 0 ? Math.round((wins / (wins + losses)) * 100) : 0;
-    return { address, yieldWon, wins, losses, winRate };
+  const players = playersData.map((data) => {
+    const winRate = (data.wins + data.losses) > 0 ? Math.round((data.wins / (data.wins + data.losses)) * 100) : 0;
+    return { ...data, winRate };
   });
 
   if (activeTab === 'yield') {
@@ -74,7 +64,7 @@ export function Leaderboard({ activePlayers }: LeaderboardProps) {
         <div className="text-center py-10 text-white/40 italic">No gladiators to display.</div>
       ) : (
         <div className="space-y-3">
-          {players.slice(0, 10).map((player, idx) => (
+          {players.slice(0, 5).map((player, idx) => (
             <div key={player.address} className="flex items-center justify-between bg-white/5 hover:bg-white/10 border border-white/10 p-4 rounded-2xl transition-colors">
               <div className="flex items-center gap-4">
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center font-black ${
@@ -107,7 +97,7 @@ export function Leaderboard({ activePlayers }: LeaderboardProps) {
                 </div>
                 <div>
                   <div className="text-[10px] text-yellow-500/50 font-black tracking-widest">YIELD WON</div>
-                  <div className="font-bold text-sm text-yellow-500">{player.yieldWon.toFixed(4)}</div>
+                  <div className="font-bold text-sm text-yellow-500">{player.yieldWon.toFixed(4)} {tokenSymbol}</div>
                 </div>
               </div>
             </div>
