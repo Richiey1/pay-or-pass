@@ -379,9 +379,9 @@ export default function LosslessArenaHome() {
                         </button>
                       </div>
 
-                      <div className="flex justify-between items-center text-[10px] sm:text-xs text-white/30 font-mono pt-1">
+                      <div className="flex justify-between items-center text-[10px] sm:text-xs text-yellow-500/80 font-black uppercase tracking-wider pt-2">
+                        <span>Min. Stake: {entryFee} {selectedToken.symbol}</span>
                         <span>Est. Value: {selectedToken.isStable ? `$${stakeAmount || "0.00"} USD` : `$${((parseFloat(stakeAmount || "0")) * celoUsdRate).toFixed(2)} USD`}</span>
-                        <span className="truncate max-w-[120px] sm:max-w-[150px]">Raw: {stakeAmount ? (parseFloat(stakeAmount) * Math.pow(10, selectedToken.decimals)).toLocaleString('fullwide', {useGrouping:false}) : "0"} Wei</span>
                       </div>
 
                       {formattedTokenBalance && stakeAmount && parseFloat(stakeAmount) > parseFloat(formattedTokenBalance) && (
@@ -404,7 +404,7 @@ export default function LosslessArenaHome() {
                       
                       {stakeAmount && parseFloat(stakeAmount) < parseFloat(entryFee) && (
                         <div className="text-center text-[9px] text-red-500 font-black uppercase tracking-wider mt-2">
-                          ⚠️ Minimum Stake is {entryFee} CELO
+                          ⚠️ Minimum Stake is {entryFee} {selectedToken.symbol}
                         </div>
                       )}
                     </div>
