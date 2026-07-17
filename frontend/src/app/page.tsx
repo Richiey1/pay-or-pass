@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useDisconnect, useWaitForTransactionReceipt } from "wagmi";
+import { useDisconnect, useWaitForTransactionReceipt, useBalance } from "wagmi";
+import { formatUnits } from "viem";
 
 import { useAppKit } from "@reown/appkit/react";
 import AdminPanel from "@/components/AdminPanel";
@@ -61,6 +62,17 @@ export default function LosslessArenaHome() {
   const celoUsdRate = useCeloPrice();
   const [currentPage, setCurrentPage] = useState(1);
   
+  const SUPPORTED_TOKENS = [
+    { symbol: "CELO", address: "0x471EcE3750Da237f93B8E339c536989b8978a438", decimals: 18, isStable: false },
+    { symbol: "USDm", address: "0x765DE816845861e75A25fCA122bb6898B8B1282a", decimals: 18, isStable: true },
+    { symbol: "USDT", address: "0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e", decimals: 6, isStable: true },
+    { symbol: "USDC", address: "0xcebA9300f2b948710d2653dD7B07f33A8B32118C", decimals: 6, isStable: true },
+    { symbol: "EURm", address: "0xD8763CBa276a3738E6DE85b4b3bF5FDed6D6cA73", decimals: 18, isStable: true },
+  ];
+
+  const [selectedToken, setSelectedToken] = useState(SUPPORTED_TOKENS[0]);
+  const [isTokenDropdownOpen, setIsTokenDropdownOpen] = useState(false);
+
   const {
     address,
     isConnected,
@@ -92,6 +104,15 @@ export default function LosslessArenaHome() {
     activeAction,
     isLoading,
   } = useLosslessArena();
+
+  const isNativeToken = selectedToken.address === "0x471EcE3750Da237f93B8E339c536989b8978a438" || selectedToken.address === "0x0000000000000000000000000000000000000000";
+
+  const { data: tokenBalanceData } = useBalance({
+    address: address,
+    token: isNativeToken ? undefined : selectedToken.address as `0x${string}`,
+  });
+
+  const formattedTokenBalance = tokenBalanceData ? formatUnits(tokenBalanceData.value, selectedToken.decimals) : "0.0";
 
   // Watch for transaction confirmations
   const { data: txReceipt, isSuccess: txConfirmed } = useWaitForTransactionReceipt({
@@ -289,48 +310,63 @@ export default function LosslessArenaHome() {
                     <div className="space-y-3 w-full text-left">
                       <div className="flex justify-between items-center text-[10px] text-white/50 font-black uppercase tracking-wider mb-1">
                         <span>Stake Amount</span>
-                        {formattedBalance && (
+                        {formattedTokenBalance && (
                           <span>
-                            Bal: {parseFloat(formattedBalance).toFixed(4)} CELO 
-                            <span className="text-red-400 font-mono ml-1">(${(parseFloat(formattedBalance) * celoUsdRate).toFixed(2)})</span>
+                            Bal: {parseFloat(formattedTokenBalance).toFixed(4)} {selectedToken.symbol}
+                            {!selectedToken.isStable && <span className="text-red-400 font-mono ml-1">(${(parseFloat(formattedTokenBalance) * celoUsdRate).toFixed(2)})</span>}
                           </span>
                         )}
                       </div>
 
                       <div className="flex gap-2">
-                        <div className="relative flex-1">
-                          <input
-                            type="number"
-                            step="0.01"
-                            min={entryFee}
-                            value={stakeAmount}
-                            onChange={(e) => setStakeAmount(e.target.value)}
-                            placeholder={`Min ${entryFee}`}
-                            className="w-full bg-black border border-white/10 focus:border-red-500/50 rounded-xl px-4 py-3 text-xs font-black outline-none transition-all text-white pr-14"
-                          />
-                          <span className="absolute right-4 top-3 text-[10px] text-white/30 font-black">CELO</span>
+                        <input
+                          type="number"
+                          value={stakeAmount}
+                          onChange={(e) => setStakeAmount(e.target.value)}
+                          placeholder="0.005"
+                          className="w-full bg-black/50 border border-red-900 rounded-xl p-3 sm:p-4 text-white placeholder-red-900/50 outline-none focus:border-red-500 transition-colors text-lg font-mono text-center appearance-none"
+                        />
+                        <div className="relative">
+                          <button 
+                            onClick={() => setIsTokenDropdownOpen(!isTokenDropdownOpen)}
+                            className="bg-white/5 border border-white/10 hover:bg-white/10 text-white font-black px-4 rounded-xl flex items-center justify-center transition-colors h-full min-w-[80px]"
+                          >
+                            {selectedToken.symbol}
+                          </button>
+                          
+                          {isTokenDropdownOpen && (
+                            <div className="absolute top-full mt-2 right-0 w-32 bg-black border border-white/10 rounded-xl overflow-hidden z-50 shadow-2xl">
+                              {SUPPORTED_TOKENS.map((t) => (
+                                <button
+                                  key={t.symbol}
+                                  onClick={() => {
+                                    setSelectedToken(t);
+                                    setIsTokenDropdownOpen(false);
+                                  }}
+                                  className={`w-full text-left px-4 py-3 text-sm font-black transition-colors ${
+                                    selectedToken.symbol === t.symbol ? 'bg-red-600/20 text-red-500' : 'text-white/70 hover:bg-white/5 hover:text-white'
+                                  }`}
+                                >
+                                  {t.symbol}
+                                </button>
+                              ))}
+                            </div>
+                          )}
                         </div>
-                        <button
-                          onClick={() => {
-                            if (formattedBalance) {
-                              const maxStake = Math.max(0, parseFloat(formattedBalance) - 0.05);
-                              setStakeAmount(maxStake.toFixed(4));
-                            }
-                          }}
-                          className="px-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black uppercase text-white transition-all cursor-pointer"
+                        <button 
+                          onClick={() => setStakeAmount(formattedTokenBalance || "0")}
+                          className="bg-white/5 border border-white/10 hover:bg-white/10 text-white/50 hover:text-white text-xs font-black px-3 rounded-xl transition-colors"
                         >
                           Max
                         </button>
                       </div>
 
-                      {stakeAmount && !isNaN(parseFloat(stakeAmount)) && (
-                        <div className="flex justify-between items-center text-[10px] text-red-400 font-mono mt-1">
-                          <span>Est. Value: ${(parseFloat(stakeAmount || "0") * celoUsdRate).toFixed(2)} USD</span>
-                          <span>Raw: {(parseFloat(stakeAmount || "0") * 1e18).toLocaleString("fullwide", {useGrouping: false})} Wei</span>
-                        </div>
-                      )}
+                      <div className="flex justify-between items-center text-[10px] sm:text-xs text-white/30 font-mono pt-1">
+                        <span>Est. Value: {selectedToken.isStable ? `$${stakeAmount || "0.00"} USD` : `$${((parseFloat(stakeAmount || "0")) * celoUsdRate).toFixed(2)} USD`}</span>
+                        <span className="truncate max-w-[120px] sm:max-w-[150px]">Raw: {stakeAmount ? (parseFloat(stakeAmount) * Math.pow(10, selectedToken.decimals)).toLocaleString('fullwide', {useGrouping:false}) : "0"} Wei</span>
+                      </div>
 
-                      {formattedBalance && stakeAmount && parseFloat(stakeAmount) > parseFloat(formattedBalance) && (
+                      {formattedTokenBalance && stakeAmount && parseFloat(stakeAmount) > parseFloat(formattedTokenBalance) && (
                         <div className="flex flex-col items-center gap-2 mt-2">
                           <div className="text-center text-[9px] text-red-500 font-black uppercase tracking-wider">
                             ⚠️ Insufficient balance for stake
@@ -356,12 +392,13 @@ export default function LosslessArenaHome() {
                     </div>
 
                     <button 
-                      onClick={() => enterArena(stakeAmount, "0x0000000000000000000000000000000000000000", 0)}
+                      onClick={() => enterArena(stakeAmount, selectedToken.address, 0)}
                       disabled={
                         !stakeAmount || 
                         isNaN(parseFloat(stakeAmount)) || 
-                        parseFloat(stakeAmount) < parseFloat(entryFee) ||
-                        (formattedBalance ? parseFloat(stakeAmount) > parseFloat(formattedBalance) : false)
+                        parseFloat(stakeAmount) <= 0 ||
+                        (formattedTokenBalance ? parseFloat(stakeAmount) > parseFloat(formattedTokenBalance) : false) ||
+                        activeAction === "enter"
                       }
                       className="w-full bg-red-600 hover:bg-red-500 text-white font-black p-4 rounded-2xl transition-all shadow-[0_0_30px_rgba(220,38,38,0.4)] flex items-center justify-center gap-2 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed text-xs mt-4"
                     >

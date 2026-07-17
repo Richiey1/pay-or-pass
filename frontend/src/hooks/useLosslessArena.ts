@@ -142,13 +142,14 @@ export function useLosslessArena() {
       setTxError(null);
       
       const isStable = token.toLowerCase() === "0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e".toLowerCase() || token.toLowerCase() === "0xcebA9300f2b948710d2653dD7B07f33A8B32118C".toLowerCase();
+      const isNative = token.toLowerCase() === "0x471ece3750da237f93b8e339c536989b8978a438" || token === "0x0000000000000000000000000000000000000000";
       const stakeVal = parseUnits(customAmount || "10", isStable ? 6 : 18);
-      if (token === "0x0000000000000000000000000000000000000000" && balanceData && balanceData.value < stakeVal) {
+      if (isNative && balanceData && balanceData.value < stakeVal) {
         throw new Error(`Insufficient CELO balance. Required: ${formatEther(stakeVal)} CELO, Available: ${formattedBalance} CELO`);
       }
 
       // Check and Approve ERC20 if needed
-      if (token !== "0x0000000000000000000000000000000000000000" && address) {
+      if (!isNative && address) {
         setTxState("preparing");
         const currentAllowance = await readContract(config, {
           address: token as `0x${string}`,
@@ -185,7 +186,7 @@ export function useLosslessArena() {
         abi: LOSSLESS_ARENA_ABI,
         functionName: FUNCTION_NAMES.ENTER_ARENA,
         args: [token as `0x${string}`],
-        value: token === "0x0000000000000000000000000000000000000000" ? stakeVal : BigInt(0),
+        value: isNative ? stakeVal : BigInt(0),
         ...(feeCurrency ? { feeCurrency } : {}),
       } as any);
 
