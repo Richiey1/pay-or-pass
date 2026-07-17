@@ -189,11 +189,15 @@ export default function LosslessArenaHome() {
               PAYOR<br/>PASS
             </h1>
             
-            <p className="text-red-200/50 font-bold uppercase text-sm tracking-widest max-w-2xl leading-relaxed">
-              War Room Command Center<br />
-              BUILD YOUR TREASURY. DEFEAT YOUR RIVAL.<br />
-              A 1v1 real-time strategy battle where two players compete to grow their treasury the fastest. Only the DeFi yield is at stake. Your principal is always safe.
-            </p>
+            <div className="text-red-200/50 font-bold uppercase text-sm tracking-widest max-w-2xl leading-relaxed space-y-4">
+              <p>
+                The Social Lossless Arena.<br />
+                Stake your assets into the gladiator pit and fight for accumulated DeFi yield using a simple Strike/Block system. If you win, you sweep the prize pool. If you lose, you keep 100% of your principal. Pure upside, zero risk.
+              </p>
+              <p>
+                Play, refer friends for buffs, and climb the global leaderboards.
+              </p>
+            </div>
             
             {!isMiniPay ? (
               <button
