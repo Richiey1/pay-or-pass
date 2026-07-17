@@ -2,12 +2,15 @@
 
 import React, { useState, useEffect } from "react";
 import { useDisconnect, useWaitForTransactionReceipt } from "wagmi";
+
 import { useAppKit } from "@reown/appkit/react";
 import AdminPanel from "@/components/AdminPanel";
 import { useLosslessArena } from "@/hooks/useLosslessArena";
 import { TransactionModal } from "@/components/ui/TransactionModal";
 import { GameGuideModal } from "@/components/ui/GameGuideModal";
 import { OpponentHUDModal } from "@/components/ui/OpponentHUDModal";
+import CombatArena from "@/components/CombatArena";
+import { Leaderboard } from "@/components/Leaderboard";
 import { useMiniPay } from "@/hooks/useMiniPay";
 import { useCeloPrice } from "@/hooks/useCeloPrice";
 import { 
@@ -24,7 +27,8 @@ import {
   RefreshCw,
   Copy,
   Check,
-  Info
+  Info,
+  Share2
 } from "lucide-react";
 
 export default function LosslessArenaHome() {
@@ -71,8 +75,12 @@ export default function LosslessArenaHome() {
     myYieldWon,
     selectedOpponent,
     setSelectedOpponent,
+    currentFightId,
+    currentFightData,
     enterArena,
     fight,
+    joinFight,
+    revealChoice,
     exitArena,
     triggerRefetch,
     balance,
@@ -123,7 +131,14 @@ export default function LosslessArenaHome() {
           <img 
             src="/payorpass-logo.png" 
             alt="PayorPass Logo" 
-            className="h-14 sm:h-16 md:h-24 w-auto object-contain" 
+            onClick={() => {
+              if (isConnected) {
+                setSelectedOpponent(null);
+                setViewingOpponent(null);
+                triggerRefetch();
+              }
+            }}
+            className="h-14 sm:h-16 md:h-24 w-auto object-contain cursor-pointer transition-transform hover:scale-105 active:scale-95" 
           />
         </div>
         
@@ -175,7 +190,9 @@ export default function LosslessArenaHome() {
             </h1>
             
             <p className="text-red-200/50 font-bold uppercase text-sm tracking-widest max-w-2xl leading-relaxed">
-              An Elite Retail Onboarding Play. We abstract away complex DeFi yield generation behind a fun, risk-free arcade game to drive massive Daily Active Users. Stake {entryFee} CELO, fight for the accrued yield, keep your principal 100% safe.
+              War Room Command Center<br />
+              BUILD YOUR TREASURY. DEFEAT YOUR RIVAL.<br />
+              A 1v1 real-time strategy battle where two players compete to grow their treasury the fastest. Only the DeFi yield is at stake. Your principal is always safe.
             </p>
             
             {!isMiniPay ? (
@@ -366,6 +383,26 @@ export default function LosslessArenaHome() {
                         </button>
                       )}
                     </div>
+
+                    <div className="flex justify-center gap-2 mb-4">
+                      <a 
+                        href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`I'm dominating the Lossless Arena in PayOrPass! Fight me: https://payorpass.xyz/?ref=${address}`)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="bg-[#1DA1F2]/20 text-[#1DA1F2] hover:bg-[#1DA1F2]/30 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase flex items-center gap-1 transition-all"
+                      >
+                        Share to earn Energy
+                      </a>
+                      <button 
+                        onClick={() => {
+                          navigator.clipboard.writeText(`https://payorpass.xyz/?ref=${address}`);
+                          alert('Referral link copied! Share to get a defense buff.');
+                        }}
+                        className="bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase flex items-center gap-1 transition-all"
+                      >
+                        <Share2 className="w-3 h-3" /> Invite Friend
+                      </button>
+                    </div>
                     
                     <div className="grid grid-cols-2 gap-4">
                       <div className="bg-black/50 p-3 rounded-xl border border-white/10">
@@ -392,120 +429,120 @@ export default function LosslessArenaHome() {
 
               {/* The Arena (8 cols) */}
               <div className="lg:col-span-8 bg-black/40 border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 backdrop-blur-md">
-                <h2 className="text-xl sm:text-2xl font-black italic tracking-widest mb-4 sm:mb-6 flex items-center gap-2">
-                  <Crosshair className="w-6 h-6 text-red-500" /> SELECT OPPONENT
-                </h2>
-                
-                <div className="space-y-4">
-                  {isLoading ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {Array.from({ length: 4 }).map((_, i) => (
-                        <div key={i} className="p-4 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between animate-pulse">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-white/10" />
-                            <div className="space-y-2">
-                              <div className="h-3 w-24 bg-white/10 rounded" />
-                              <div className="h-2.5 w-12 bg-white/5 rounded" />
-                            </div>
-                          </div>
-                          <div className="h-6 w-12 bg-white/10 rounded" />
-                        </div>
-                      ))}
-                    </div>
-                  ) : activePlayers.length === 0 ? (
-                    <div className="text-white/40 italic py-10 text-center">The arena is empty. Be the first to enter.</div>
-                  ) : activePlayers.length === 1 && address && activePlayers[0].toLowerCase() === address.toLowerCase() ? (
-                    <div className="text-white/40 italic py-10 text-center">You are currently the only player in the arena. Waiting for opponents to enter...</div>
-                  ) : (
-                    <>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {activePlayers
-                          .filter(playerAddr => playerAddr.toLowerCase() !== address?.toLowerCase())
-                          .slice((currentPage - 1) * 6, currentPage * 6)
-                          .map((playerAddr) => {
-                          const isSelected = selectedOpponent === playerAddr;
-                          return (
-                            <div 
-                              key={playerAddr}
-                              onClick={() => setViewingOpponent(playerAddr)}
-                              className={`group cursor-pointer p-4 rounded-2xl border transition-all flex items-center justify-between ${
-                                isSelected 
-                                  ? "bg-red-900/40 border-red-500 shadow-[0_0_20px_rgba(220,38,38,0.3)]" 
-                                  : "bg-white/5 border-white/10 hover:border-red-500/30 hover:bg-red-950/10"
-                              }`}
-                            >
+                {(currentFightId && currentFightId > BigInt(0)) || selectedOpponent ? (
+                  <CombatArena
+                    myAddress={address}
+                    opponentAddress={selectedOpponent}
+                    currentFightId={currentFightId}
+                    currentFightData={currentFightData}
+                    onInitiateFight={fight}
+                    onJoinFight={joinFight}
+                    onRevealChoice={revealChoice}
+                    onClearOpponent={() => {
+                      setSelectedOpponent(null);
+                      triggerRefetch();
+                    }}
+                  />
+                ) : (
+                  <>
+                    <h2 className="text-xl sm:text-2xl font-black italic tracking-widest mb-4 sm:mb-6 flex items-center gap-2">
+                      <Crosshair className="w-6 h-6 text-red-500" /> SELECT OPPONENT
+                    </h2>
+                    
+                    <div className="space-y-4">
+                      {isLoading ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {Array.from({ length: 4 }).map((_, i) => (
+                            <div key={i} className="p-4 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between animate-pulse">
                               <div className="flex items-center gap-3">
-                                <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full overflow-hidden flex items-center justify-center border-2 transition-all shrink-0 ${isSelected ? 'border-red-500 bg-red-500/20 animate-pulse' : 'border-white/10 bg-white/5'}`}>
-                                  <img
-                                    src={`https://api.dicebear.com/7.x/bottts/svg?seed=${playerAddr}`}
-                                    alt="Gladiator"
-                                    className="w-full h-full object-cover"
-                                  />
-                                </div>
-                                <div>
-                                  <div className="font-mono text-sm font-bold text-white/80">
-                                    {playerAddr.slice(0,6)}...{playerAddr.slice(-4)}
-                                  </div>
-                                  <div className="text-[10px] text-white/40 font-black tracking-widest mt-1">GLADIATOR</div>
+                                <div className="w-10 h-10 rounded-full bg-white/10" />
+                                <div className="space-y-2">
+                                  <div className="h-3 w-24 bg-white/10 rounded" />
+                                  <div className="h-2.5 w-12 bg-white/5 rounded" />
                                 </div>
                               </div>
-                              <div>
-                                {isSelected ? (
-                                  <span className="text-[9px] font-black text-red-500 px-2.5 py-1 rounded bg-red-950/30 border border-red-500/50 uppercase tracking-widest flex items-center gap-1 animate-pulse">
-                                    <Crosshair className="w-3 h-3 text-red-500" /> LOCKED
-                                  </span>
-                                ) : (
-                                  <span className="text-[9px] font-black text-white/30 px-2.5 py-1 rounded bg-white/5 border border-white/5 uppercase tracking-widest group-hover:text-red-500 group-hover:border-red-500/30 transition-all">
-                                    SELECT
-                                  </span>
-                                )}
-                              </div>
+                              <div className="h-6 w-12 bg-white/10 rounded" />
                             </div>
-                          )
-                        })}
-                      </div>
-                      
-                      {activePlayers.filter(p => p.toLowerCase() !== address?.toLowerCase()).length > 6 && (
-                        <div className="flex justify-center items-center gap-4 mt-6">
-                          <button 
-                            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                            disabled={currentPage === 1}
-                            className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-xs font-black uppercase text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-                          >
-                            Prev
-                          </button>
-                          <span className="text-white/50 text-xs font-black">
-                            {currentPage} / {Math.ceil(activePlayers.filter(p => p.toLowerCase() !== address?.toLowerCase()).length / 6)}
-                          </span>
-                          <button 
-                            onClick={() => setCurrentPage(prev => Math.min(Math.ceil(activePlayers.filter(p => p.toLowerCase() !== address?.toLowerCase()).length / 6), prev + 1))}
-                            disabled={currentPage === Math.ceil(activePlayers.filter(p => p.toLowerCase() !== address?.toLowerCase()).length / 6)}
-                            className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-xs font-black uppercase text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-                          >
-                            Next
-                          </button>
+                          ))}
                         </div>
+                      ) : activePlayers.length === 0 ? (
+                        <div className="text-white/40 italic py-10 text-center">The arena is empty. Be the first to enter.</div>
+                      ) : activePlayers.length === 1 && address && activePlayers[0].toLowerCase() === address.toLowerCase() ? (
+                        <div className="text-white/40 italic py-10 text-center">You are currently the only player in the arena. Waiting for opponents to enter...</div>
+                      ) : (
+                        <>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {activePlayers
+                              .filter(playerAddr => playerAddr.toLowerCase() !== address?.toLowerCase())
+                              .slice((currentPage - 1) * 6, currentPage * 6)
+                              .map((playerAddr) => {
+                              const isSelected = selectedOpponent === playerAddr;
+                              return (
+                                <div 
+                                  key={playerAddr}
+                                  onClick={() => setViewingOpponent(playerAddr)}
+                                  className={`group cursor-pointer p-4 rounded-2xl border transition-all flex items-center justify-between ${
+                                    isSelected 
+                                      ? "bg-red-900/40 border-red-500 shadow-[0_0_20px_rgba(220,38,38,0.3)]" 
+                                      : "bg-white/5 border-white/10 hover:border-red-500/30 hover:bg-red-950/10"
+                                  }`}
+                                >
+                                  <div className="flex items-center gap-3">
+                                    <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full overflow-hidden flex items-center justify-center border-2 transition-all shrink-0 ${isSelected ? 'border-red-500 bg-red-500/20 animate-pulse' : 'border-white/10 bg-white/5'}`}>
+                                      <img
+                                        src={`https://api.dicebear.com/7.x/bottts/svg?seed=${playerAddr}`}
+                                        alt="Gladiator"
+                                        className="w-full h-full object-cover"
+                                      />
+                                    </div>
+                                    <div>
+                                      <div className="font-mono text-sm font-bold text-white/80">
+                                        {playerAddr.slice(0,6)}...{playerAddr.slice(-4)}
+                                      </div>
+                                      <div className="text-[10px] text-white/40 font-black tracking-widest mt-1">GLADIATOR</div>
+                                    </div>
+                                  </div>
+                                  <div>
+                                    <span className="text-[9px] font-black text-white/30 px-2.5 py-1 rounded bg-white/5 border border-white/5 uppercase tracking-widest group-hover:text-red-500 group-hover:border-red-500/30 transition-all">
+                                      VIEW
+                                    </span>
+                                  </div>
+                                </div>
+                              )
+                            })}
+                          </div>
+                          
+                          {activePlayers.filter(p => p.toLowerCase() !== address?.toLowerCase()).length > 6 && (
+                            <div className="flex justify-center items-center gap-4 mt-6">
+                              <button 
+                                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                disabled={currentPage === 1}
+                                className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-xs font-black uppercase text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                              >
+                                Prev
+                              </button>
+                              <span className="text-white/50 text-xs font-black">
+                                {currentPage} / {Math.ceil(activePlayers.filter(p => p.toLowerCase() !== address?.toLowerCase()).length / 6)}
+                              </span>
+                              <button 
+                                onClick={() => setCurrentPage(prev => Math.min(Math.ceil(activePlayers.filter(p => p.toLowerCase() !== address?.toLowerCase()).length / 6), prev + 1))}
+                                disabled={currentPage === Math.ceil(activePlayers.filter(p => p.toLowerCase() !== address?.toLowerCase()).length / 6)}
+                                className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-xs font-black uppercase text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                              >
+                                Next
+                              </button>
+                            </div>
+                          )}
+                        </>
                       )}
-                    </>
-                  )}
-                </div>
-
-                {/* Combat Execution */}
-                <div className="mt-8 pt-8 border-t border-white/10">
-                  <button
-                    onClick={fight}
-                    disabled={!isInArena || !selectedOpponent}
-                    className="w-full bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 text-white font-black p-5 rounded-2xl transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-3 text-xl shadow-[0_0_40px_rgba(220,38,38,0.3)] cursor-pointer"
-                  >
-                    <Swords className="w-6 h-6" /> INITIATE COMBAT
-                  </button>
-                  {!isInArena && (
-                    <div className="text-center text-xs text-red-400 font-bold mt-3">You must be in the arena to fight.</div>
-                  )}
-                </div>
+                    </div>
+                  </>
+                )}
               </div>
 
             </div>
+            
+            <Leaderboard activePlayers={activePlayers} />
             
             {/* Owner Governance Admin Console */}
             {isAdmin && (

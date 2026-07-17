@@ -20,13 +20,22 @@ export const FUNCTION_NAMES = {
   SET_ENTRY_FEE: "setEntryFee",
   SET_FIGHT_COOLDOWN: "setFightCooldown",
   FIGHT_COOLDOWN: "fightCooldown",
+  REVEAL_CHOICE: "revealChoice",
+  CURRENT_FIGHT: "currentFight",
+  FIGHTS: "fights",
+  JOIN_FIGHT: "joinFight"
 } as const;
 
 export const LOSSLESS_ARENA_ABI = parseAbi([
   "function enterArena(address token) external payable",
   "function submitChoice(address opponent, bytes32 commitHash) external",
+  "function joinFight(uint256 fightId, bytes32 commitHash) external",
+  "function revealChoice(uint256 fightId, uint8 choice, bytes32 salt) external",
+  "function claimReferralBuff(address referee) external",
+  "function currentFight(address) view returns (uint256)",
+  "function fights(uint256) view returns (address player1, address player2, bytes32 commit1, bytes32 commit2, uint8 choice1, uint8 choice2, uint256 startTime, bool resolved, address token)",
   "function exitArena() external",
-  "function gladiators(address) view returns (address player, uint256 principalStaked, uint256 totalYieldWon, uint256 wins, uint256 losses, uint256 lastFightAt, bool isActive, address stakeToken)",
+  "function gladiators(address) view returns (address player, uint256 principalStaked, uint256 totalYieldWon, uint256 wins, uint256 losses, uint256 lastFightAt, bool isActive, address stakeToken, bool inMoola)",
   "function totalArenaStake() view returns (uint256)",
   "function apyBasisPoints() view returns (uint256)",
   "function accumulatedPrizePools(address) view returns (uint256)",

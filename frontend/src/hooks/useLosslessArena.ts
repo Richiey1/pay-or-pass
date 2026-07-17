@@ -66,6 +66,22 @@ export function useLosslessArena() {
     args: address ? [address] : undefined,
   });
 
+  const { data: currentFightIdData, refetch: refetchCurrentFightId } = useReadContract({
+    address: CONTRACT_ADDRESS as `0x${string}`,
+    abi: LOSSLESS_ARENA_ABI,
+    functionName: FUNCTION_NAMES.CURRENT_FIGHT,
+    args: address ? [address] : undefined,
+  });
+
+  const currentFightId = currentFightIdData as bigint | undefined;
+
+  const { data: currentFightData, refetch: refetchCurrentFightData } = useReadContract({
+    address: CONTRACT_ADDRESS as `0x${string}`,
+    abi: LOSSLESS_ARENA_ABI,
+    functionName: FUNCTION_NAMES.FIGHTS,
+    args: currentFightId && currentFightId > BigInt(0) ? [currentFightId] : undefined,
+  });
+
   const { data: entryFeeData } = useReadContract({
     address: CONTRACT_ADDRESS as `0x${string}`,
     abi: LOSSLESS_ARENA_ABI,
@@ -113,7 +129,9 @@ export function useLosslessArena() {
     refetchTotalStake();
     refetchPrize();
     refetchBalance();
-  }, [refetchMyGladiator, refetchPlayers, refetchTotalStake, refetchPrize, refetchBalance]);
+    refetchCurrentFightId();
+    refetchCurrentFightData();
+  }, [refetchMyGladiator, refetchPlayers, refetchTotalStake, refetchPrize, refetchBalance, refetchCurrentFightId, refetchCurrentFightData]);
 
   // Actions
   const enterArena = async (customAmount: string, token: string, strategy: number) => {
@@ -180,19 +198,16 @@ export function useLosslessArena() {
     }
   };
 
-  const fight = async () => {
+  const fight = async (choice: number) => {
     if (!isConnected || !selectedOpponent) return;
     try {
       setActiveAction("fight");
       setTxState("preparing");
       setTxError(null);
 
-      // Simulate step
-      await new Promise(r => setTimeout(r, 800));
-
-      const randomChoice = Math.floor(Math.random() * 3) + 1; // 1: Attack, 2: Defend, 3: Invest
       const salt = "salt_" + Math.random().toString();
-      const commitHash = keccak256(encodePacked(["uint8", "string"], [randomChoice, salt]));
+      const commitHash = keccak256(encodePacked(["uint8", "string", "address"], [choice, salt, address as `0x${string}`]));
+      localStorage.setItem(`payorpass_commit_${address}`, JSON.stringify({ choice, salt }));
 
       const hash = await writeContractAsync({
         address: CONTRACT_ADDRESS as `0x${string}`,
@@ -207,6 +222,63 @@ export function useLosslessArena() {
     } catch (err: any) {
       setTxState("error");
       setTxError(err.message || "Failed to initiate fight");
+      throw err;
+    }
+  };
+
+  const joinFight = async (fightId: bigint, choice: number) => {
+    if (!isConnected) return;
+    try {
+      setActiveAction("fight");
+      setTxState("preparing");
+      setTxError(null);
+
+      const salt = "salt_" + Math.random().toString();
+      const commitHash = keccak256(encodePacked(["uint8", "string", "address"], [choice, salt, address as `0x${string}`]));
+      localStorage.setItem(`payorpass_commit_${address}`, JSON.stringify({ choice, salt }));
+
+      const hash = await writeContractAsync({
+        address: CONTRACT_ADDRESS as `0x${string}`,
+        abi: LOSSLESS_ARENA_ABI,
+        functionName: FUNCTION_NAMES.JOIN_FIGHT,
+        args: [fightId, commitHash],
+        ...(feeCurrency ? { feeCurrency } : {}),
+      } as any);
+
+      setTxHash(hash);
+      setTxState("confirming");
+    } catch (err: any) {
+      setTxState("error");
+      setTxError(err.message || "Failed to join fight");
+      throw err;
+    }
+  };
+
+  const revealChoice = async (fightId: bigint) => {
+    if (!isConnected) return;
+    try {
+      setActiveAction("fight");
+      setTxState("preparing");
+      setTxError(null);
+
+      const saved = localStorage.getItem(`payorpass_commit_${address}`);
+      if (!saved) throw new Error("No saved commit found. Cannot reveal.");
+      
+      const { choice, salt } = JSON.parse(saved);
+
+      const hash = await writeContractAsync({
+        address: CONTRACT_ADDRESS as `0x${string}`,
+        abi: LOSSLESS_ARENA_ABI,
+        functionName: FUNCTION_NAMES.REVEAL_CHOICE,
+        args: [fightId, choice, salt],
+        ...(feeCurrency ? { feeCurrency } : {}),
+      } as any);
+
+      setTxHash(hash);
+      setTxState("confirming");
+    } catch (err: any) {
+      setTxState("error");
+      setTxError(err.message || "Failed to reveal choice");
       throw err;
     }
   };
@@ -240,6 +312,29 @@ export function useLosslessArena() {
 
   // User must manually trigger refetch from the UI to avoid annoying page reloads
 
+  const claimReferralBuff = async (referee: string) => {
+    if (!isConnected) return;
+    try {
+      setTxState("preparing");
+      setTxError(null);
+
+      const hash = await writeContractAsync({
+        address: CONTRACT_ADDRESS as `0x${string}`,
+        abi: LOSSLESS_ARENA_ABI,
+        functionName: "claimReferralBuff",
+        args: [referee],
+        ...(feeCurrency ? { feeCurrency } : {}),
+      } as any);
+
+      setTxHash(hash);
+      setTxState("confirming");
+    } catch (err: any) {
+      setTxState("error");
+      setTxError(err.message || "Failed to claim referral buff");
+      throw err;
+    }
+  };
+
   return {
     address,
     isConnected,
@@ -254,9 +349,14 @@ export function useLosslessArena() {
     myYieldWon,
     selectedOpponent,
     setSelectedOpponent,
+    currentFightId,
+    currentFightData,
     enterArena,
     fight,
+    joinFight,
+    revealChoice,
     exitArena,
+    claimReferralBuff,
     triggerRefetch,
     balance: balanceData,
     formattedBalance,
