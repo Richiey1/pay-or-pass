@@ -84,6 +84,7 @@ contract PayOrPass is ReentrancyGuard {
     event YieldConfigured(address indexed pool, address indexed mToken, address indexed token);
     event MegaYieldThreshold(uint256 amount);
     event ReferralBuffClaimed(address indexed referrer, address indexed referee);
+    event ProtocolFundWithdrawn(address indexed token, address indexed to, uint256 amount);
 
     modifier onlyAdmin() {
         require(isAdmin[msg.sender], "Not an admin");
@@ -346,40 +347,46 @@ contract PayOrPass is ReentrancyGuard {
         address loser = address(0);
         bool clash = false;
 
-        // 1: Attack, 2: Defend, 3: Invest
-        if (f.choice1 == 1) {
-            if (f.choice2 == 1) clash = true;
-            else if (f.choice2 == 2 && p2DefBonus == 0) {
-                // p1 attacks, p2 defends but no bonus - let's say defend blocks attack
-                // no winner
-                clash = true;
-            } else if (f.choice2 == 3) {
-                // attack beats invest
-                winner = f.player1;
-                loser = f.player2;
-            }
-        } else if (f.choice1 == 2) {
-            if (f.choice2 == 1 && p1DefBonus == 0) {
-                clash = true;
-            } else if (f.choice2 == 3) {
-                // defend vs invest = no effect, maybe invest wins?
-                winner = f.player2; // invest grows
-                loser = f.player1;
-            } else {
-                clash = true;
-            }
-        } else if (f.choice1 == 3) {
-            if (f.choice2 == 1) {
+        // Combat resolution — 1: Strike (Attack), 2: Block (Defend), 3: Yield (Invest).
+        // RPS outcome table:
+        //   Strike vs Yield   -> striker wins (drains the yield)
+        //   Strike vs Block   -> strike wasted, no winner (a buffed Block beats the Strike)
+        //   Strike vs Strike  -> clash, no winner
+        //   Block  vs Yield   -> wasted block, no effect, no winner
+        //   Yield  vs Yield   -> both grow, clean round, no winner
+        // The referral defense buff turns a Block into a counter that beats an incoming Strike.
+        if (f.choice1 == f.choice2) {
+            // Mirror moves: Strike/Strike clash, Block/Block stalemate, Yield/Yield clean round.
+            clash = true;
+        } else if (f.choice1 == 1 && f.choice2 == 3) {
+            // Strike beats Yield.
+            winner = f.player1;
+            loser = f.player2;
+        } else if (f.choice1 == 3 && f.choice2 == 1) {
+            // Yield loses to Strike.
+            winner = f.player2;
+            loser = f.player1;
+        } else if (f.choice1 == 1 && f.choice2 == 2) {
+            // Strike vs Block: buffed block counters and wins, otherwise the strike is wasted.
+            if (p2DefBonus == 1) {
                 winner = f.player2;
                 loser = f.player1;
-            } else if (f.choice2 == 2) {
+            } else {
+                clash = true;
+            }
+        } else if (f.choice1 == 2 && f.choice2 == 1) {
+            // Block vs Strike (symmetric to above).
+            if (p1DefBonus == 1) {
                 winner = f.player1;
                 loser = f.player2;
             } else {
-                clash = true; // both invest, clean round
+                clash = true;
             }
+        } else {
+            // Remaining pairs are Block vs Yield (either order): wasted block, no effect.
+            clash = true;
         }
-        
+
         if (clash) {
             emit FightClash(fightId, f.player1, f.player2);
             return;
@@ -388,12 +395,12 @@ contract PayOrPass is ReentrancyGuard {
         if (winner != address(0)) {
             gladiators[winner].wins++;
             gladiators[loser].losses++;
-            _distributeFight(winner, f.token);
-            emit FightResolved(fightId, winner, loser, 0); // Event can be updated with actual amount
+            uint256 yieldWon = _distributeFight(winner, f.token);
+            emit FightResolved(fightId, winner, loser, yieldWon);
         }
     }
 
-    function _distributeFight(address winner, address token) internal {
+    function _distributeFight(address winner, address token) internal returns (uint256) {
         _updateSimulatedYield();
 
         uint256 moolaPrize = 0;
@@ -445,7 +452,28 @@ contract PayOrPass is ReentrancyGuard {
             if (accumulatedPrizePools[token] >= 5 ether) { // Using 5 ether as a proxy threshold for mega yield
                 emit MegaYieldThreshold(accumulatedPrizePools[token]);
             }
+
+            return winnerAmount;
         }
+
+        return 0;
+    }
+
+    /// @notice Withdraw accrued protocol fees for a token to a recipient. Admin-only.
+    /// @dev protocolFund accrues the 10% protocol slice from every distributed fight.
+    function withdrawProtocolFund(address token, address to) external onlyAdmin nonReentrant {
+        require(to != address(0), "Zero recipient");
+        uint256 amount = protocolFund[token];
+        require(amount > 0, "No protocol funds");
+        protocolFund[token] = 0;
+
+        if (token == CELO_ERC20) {
+            (bool success, ) = to.call{value: amount}("");
+            require(success, "Protocol CELO transfer failed");
+        } else {
+            require(IERC20(token).transfer(to, amount), "Protocol ERC20 transfer failed");
+        }
+        emit ProtocolFundWithdrawn(token, to, amount);
     }
 
     function exitArena() external nonReentrant {
