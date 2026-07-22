@@ -3,7 +3,7 @@ dotenv.config();
 
 import { ethers } from "hardhat";
 
-const LOSSLESS_ARENA_ADDRESS = "0x6B667D149a8B0AF00C3880fE0f09a6D9D8Cb62C7";
+const LOSSLESS_ARENA_ADDRESS = "0x0219aBDc1D2C84b027EC7046196Ae397f7FED703";
 const LOSSLESS_ARENA_ABI = [
   "function setTokenSupport(address token, bool isSupported, uint256 fee) external",
   "function entryFees(address) view returns (uint256)"

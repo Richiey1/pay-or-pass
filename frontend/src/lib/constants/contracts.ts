@@ -1,7 +1,7 @@
 import { parseAbi } from 'viem';
 
 // Standardized Contract Constants for LosslessArena on Celo
-export const CONTRACT_ADDRESS = '0x6B667D149a8B0AF00C3880fE0f09a6D9D8Cb62C7';
+export const CONTRACT_ADDRESS = '0x0219aBDc1D2C84b027EC7046196Ae397f7FED703';
 
 export const FUNCTION_NAMES = {
   ENTER_ARENA: "enterArena",
@@ -32,6 +32,9 @@ export const LOSSLESS_ARENA_ABI = parseAbi([
   "function joinFight(uint256 fightId, bytes32 commitHash) external",
   "function revealChoice(uint256 fightId, uint8 choice, bytes32 salt) external",
   "function claimReferralBuff(address referee) external",
+  "function withdrawProtocolFund(address token, address to) external",
+  "function protocolFund(address) view returns (uint256)",
+  "function seasonalFund(address) view returns (uint256)",
   "function currentFight(address) view returns (uint256)",
   "function fights(uint256) view returns (address player1, address player2, bytes32 commit1, bytes32 commit2, uint8 choice1, uint8 choice2, uint256 startTime, bool resolved, address token)",
   "function exitArena() external",

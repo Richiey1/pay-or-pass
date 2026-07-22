@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { parseEther, parseUnits, parseAbi } from 'viem';
 
-const PAYORPASS_ADDRESS = "0x6B667D149a8B0AF00C3880fE0f09a6D9D8Cb62C7";
+const PAYORPASS_ADDRESS = "0x0219aBDc1D2C84b027EC7046196Ae397f7FED703";
 const CELO_ERC20 = "0x471EcE3750Da237f93B8E339c536989b8978a438";
 
 const PAYORPASS_ABI = parseAbi([
