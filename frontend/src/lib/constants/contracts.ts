@@ -50,5 +50,7 @@ export const LOSSLESS_ARENA_ABI = parseAbi([
   "function setFightCooldown(uint256 newCooldown) external",
   "function entryFees(address) view returns (uint256)",
   "function fightCooldown() view returns (uint256)",
-  "function isAdmin(address) view returns (bool)"
+  "function isAdmin(address) view returns (bool)",
+  "function referralBuffExpiry(address) view returns (uint256)",
+  "function referralDefenseBonus(address) view returns (uint8)"
 ]);
