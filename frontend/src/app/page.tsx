@@ -14,6 +14,9 @@ import CombatArena from "@/components/CombatArena";
 import { Leaderboard } from "@/components/Leaderboard";
 import { useMiniPay } from "@/hooks/useMiniPay";
 import { useCeloPrice } from "@/hooks/useCeloPrice";
+import { useFreeFight } from "@/hooks/useFreeFight";
+import { useReferralBuff } from "@/hooks/useReferralBuff";
+import FreeFightBanner from "@/components/FreeFightBanner";
 import { 
   Swords, 
   Shield, 
@@ -34,6 +37,7 @@ import {
 
 export default function LosslessArenaHome() {
   const [copied, setCopied] = useState(false);
+  const [refLinkCopied, setRefLinkCopied] = useState(false);
   const [isGuideOpen, setIsGuideOpen] = useState(false);
   const [viewingOpponent, setViewingOpponent] = useState<string | null>(null);
 
@@ -108,6 +112,12 @@ export default function LosslessArenaHome() {
     activeAction,
     isLoading,
   } = useLosslessArena(selectedToken.address, selectedToken.decimals);
+
+  // ── Feature 4: Daily Free Fight via social share ───────────────────────────
+  const freeFight = useFreeFight(address);
+
+  // ── Feature 5: Referral Defense Buff ──────────────────────────────────────
+  const referral = useReferralBuff(address);
 
   const isNativeToken = selectedToken.address === "0x471EcE3750Da237f93B8E339c536989b8978a438" || selectedToken.address === "0x0000000000000000000000000000000000000000";
 
@@ -457,13 +467,58 @@ export default function LosslessArenaHome() {
                       <button 
                         onClick={() => {
                           navigator.clipboard.writeText(`https://payorpass.xyz/?ref=${address}`);
-                          alert('Referral link copied! Share to get a defense buff.');
+                          setRefLinkCopied(true);
+                          setTimeout(() => setRefLinkCopied(false), 2500);
                         }}
                         className="bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase flex items-center gap-1 transition-all"
                       >
-                        <Share2 className="w-3 h-3" /> Invite Friend
+                        {refLinkCopied
+                          ? <><Check className="w-3 h-3 text-green-400" /> Copied!</>
+                          : <><Share2 className="w-3 h-3" /> Invite Friend</>
+                        }
                       </button>
                     </div>
+
+                    {/* ── Referral Defense Buff status badge ── */}
+                    {referral.hasActiveBuff && (
+                      <div
+                        className="flex items-center gap-2 px-3 py-2 rounded-lg mb-3 text-[10px] font-black tracking-widest"
+                        style={{
+                          background: "rgba(99,102,241,0.12)",
+                          border: "1px solid rgba(99,102,241,0.35)",
+                          color: "#818cf8",
+                        }}
+                      >
+                        <Shield className="w-3 h-3 shrink-0" />
+                        <span>
+                          🛡️ DEFENSE BUFF ACTIVE — +{referral.defenseBonus} DEF
+                          &nbsp;·&nbsp;
+                          {referral.buffHoursLeft}h remaining
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Referral buff claiming in progress */}
+                    {referral.isClaiming && (
+                      <div className="text-center text-[9px] text-purple-400 tracking-widest animate-pulse mb-3">
+                        ⚔️ Registering referral buff on-chain…
+                      </div>
+                    )}
+                    {referral.claimConfirmed && !referral.hasActiveBuff && (
+                      <div className="text-center text-[9px] text-green-400 tracking-widest mb-3">
+                        ✅ Referral buff claimed! Both gladiators get +{referral.defenseBonus || 1} Defense for 24h.
+                      </div>
+                    )}
+
+                    {/* ── Feature 4: Daily Free Fight Banner ── */}
+                    <FreeFightBanner
+                      canClaim={freeFight.canClaim}
+                      hasClaimed={freeFight.hasClaimed}
+                      hasFreeFight={freeFight.hasFreeFight}
+                      hoursUntilReset={freeFight.hoursUntilReset}
+                      minutesUntilReset={freeFight.minutesUntilReset}
+                      onClaim={freeFight.claimCredit}
+                    />
                     
                     <div className="grid grid-cols-2 gap-4">
                       <div className="bg-black/50 p-3 rounded-xl border border-white/10">
