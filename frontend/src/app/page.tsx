@@ -558,6 +558,8 @@ export default function LosslessArenaHome() {
                       setSelectedOpponent(null);
                       triggerRefetch();
                     }}
+                    myStreak={myGladiator ? Number(myGladiator[9]) : 0}
+                    myYieldWon={myYieldWon}
                   />
                 ) : (
                   <>

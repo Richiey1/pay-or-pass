@@ -143,8 +143,11 @@ export function useLosslessArena(tokenAddress: string = "0x471EcE3750Da237f93B8E
     const yieldWon = data ? parseFloat(formatUnits(data[2], tokenDecimals)) : 0;
     const wins = data ? Number(data[3]) : 0;
     const losses = data ? Number(data[4]) : 0;
-    return { address, yieldWon, wins, losses };
-  }).sort((a, b) => b.yieldWon - a.yieldWon);
+    const currentStreak = data ? Number(data[9]) : 0;
+    const longestStreak = data ? Number(data[10]) : 0;
+    const totalFights = wins + losses;
+    return { address, yieldWon, wins, losses, currentStreak, longestStreak, totalFights, seasonRank: 0 };
+  }).sort((a, b) => b.yieldWon - a.yieldWon).map((p, idx) => ({ ...p, seasonRank: idx + 1 }));
 
   const getPlayerRank = (addr: string) => {
     const index = arenaPlayersWithData.findIndex(p => p.address.toLowerCase() === addr.toLowerCase());

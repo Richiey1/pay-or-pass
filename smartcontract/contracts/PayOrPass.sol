@@ -25,6 +25,8 @@ contract PayOrPass is ReentrancyGuard {
         bool isActive;
         address stakeToken;
         bool inMoola;
+        uint256 currentStreak;
+        uint256 longestStreak;
     }
 
     mapping(address => Gladiator) public gladiators;
@@ -213,7 +215,9 @@ contract PayOrPass is ReentrancyGuard {
                     lastFightAt: 0,
                     isActive: true,
                     stakeToken: token,
-                    inMoola: yieldPools[token] != address(0)
+                    inMoola: yieldPools[token] != address(0),
+                    currentStreak: 0,
+                    longestStreak: 0
                 });
                 activePlayers.push(msg.sender);
             } else {
@@ -324,8 +328,13 @@ contract PayOrPass is ReentrancyGuard {
         currentFight[f.player2] = 0;
         
         gladiators[winner].wins++;
-        gladiators[loser].losses++;
-        gladiators[winner].lastFightAt = block.timestamp;
+        if (gladiators[winner].currentStreak > gladiators[winner].longestStreak) {
+            gladiators[winner].longestStreak = gladiators[winner].currentStreak;
+        }
+
+        gladiators[loser].losses += 1;
+        gladiators[loser].lastFightAt = block.timestamp;
+        gladiators[loser].currentStreak = 0;
         
         _distributeFight(winner, f.token);
     }
@@ -394,7 +403,13 @@ contract PayOrPass is ReentrancyGuard {
 
         if (winner != address(0)) {
             gladiators[winner].wins++;
+            gladiators[winner].currentStreak++;
+            if (gladiators[winner].currentStreak > gladiators[winner].longestStreak) {
+                gladiators[winner].longestStreak = gladiators[winner].currentStreak;
+            }
+
             gladiators[loser].losses++;
+            gladiators[loser].currentStreak = 0;
             uint256 yieldWon = _distributeFight(winner, f.token);
             emit FightResolved(fightId, winner, loser, yieldWon);
         }

@@ -38,7 +38,7 @@ export const LOSSLESS_ARENA_ABI = parseAbi([
   "function currentFight(address) view returns (uint256)",
   "function fights(uint256) view returns (address player1, address player2, bytes32 commit1, bytes32 commit2, uint8 choice1, uint8 choice2, uint256 startTime, bool resolved, address token)",
   "function exitArena() external",
-  "function gladiators(address) view returns (address player, uint256 principalStaked, uint256 totalYieldWon, uint256 wins, uint256 losses, uint256 lastFightAt, bool isActive, address stakeToken, bool inMoola)",
+  "function gladiators(address) view returns (address player, uint256 principalStaked, uint256 totalYieldWon, uint256 wins, uint256 losses, uint256 lastFightAt, bool isActive, address stakeToken, bool inMoola, uint256 currentStreak, uint256 longestStreak)",
   "function totalArenaStake() view returns (uint256)",
   "function apyBasisPoints() view returns (uint256)",
   "function accumulatedPrizePools(address) view returns (uint256)",

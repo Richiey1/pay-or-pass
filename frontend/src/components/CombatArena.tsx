@@ -3,6 +3,7 @@ import { Zap, Shield, TrendingUp, Skull, Lock, Eye } from 'lucide-react';
 import { useReadContract } from 'wagmi';
 import { formatEther } from 'viem';
 import { LOSSLESS_ARENA_ABI, CONTRACT_ADDRESS, FUNCTION_NAMES } from '@/lib/constants/contracts';
+import { VictoryCard } from './VictoryCard';
 
 interface CombatArenaProps {
   myAddress: string | undefined;
@@ -13,6 +14,8 @@ interface CombatArenaProps {
   onJoinFight: (fightId: bigint, choice: number) => void;
   onRevealChoice: (fightId: bigint) => void;
   onClearOpponent: () => void;
+  myStreak?: number;
+  myYieldWon?: string;
 }
 
 export default function CombatArena({
@@ -23,7 +26,9 @@ export default function CombatArena({
   onInitiateFight,
   onJoinFight,
   onRevealChoice,
-  onClearOpponent
+  onClearOpponent,
+  myStreak = 0,
+  myYieldWon = "0.0"
 }: CombatArenaProps) {
   const [choice, setChoice] = useState<number | null>(null);
 
@@ -178,12 +183,22 @@ export default function CombatArena({
 
           <div className="text-center">
             {isResolved ? (
-              <button 
-                onClick={onClearOpponent}
-                className="bg-gray-800 hover:bg-gray-700 text-white px-8 py-3 rounded font-bold transition"
-              >
-                RETURN TO LOBBY
-              </button>
+              <div className="flex flex-col items-center gap-6">
+                {myStreak > 0 && myAddress && activeOpponent && (
+                  <VictoryCard 
+                    myAddress={myAddress} 
+                    opponentAddress={activeOpponent} 
+                    yieldEarned={myYieldWon} 
+                    streak={myStreak} 
+                  />
+                )}
+                <button 
+                  onClick={onClearOpponent}
+                  className="bg-gray-800 hover:bg-gray-700 text-white px-8 py-3 rounded font-bold transition mt-4"
+                >
+                  RETURN TO LOBBY
+                </button>
+              </div>
             ) : (
               <button 
                 onClick={handleAction}
