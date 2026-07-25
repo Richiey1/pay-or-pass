@@ -161,6 +161,7 @@ export function useLosslessArena(tokenAddress: string = "0x471EcE3750Da237f93B8E
   const myWins = myGladiator ? Number(myGladiator[3]) : 0;
   const myLosses = myGladiator ? Number(myGladiator[4]) : 0;
   const myYieldWon = myGladiator ? formatUnits(myGladiator[2], tokenDecimals) : "0.0";
+  const myStreak = myGladiator ? Number(myGladiator[9]) : 0;
 
   // Contract Writes
   const { writeContractAsync } = useWriteContract();
@@ -390,6 +391,7 @@ export function useLosslessArena(tokenAddress: string = "0x471EcE3750Da237f93B8E
     myWins,
     myLosses,
     myYieldWon,
+    myStreak,
     selectedOpponent,
     setSelectedOpponent,
     myRank,

@@ -89,6 +89,7 @@ export default function LosslessArenaHome() {
     myWins,
     myLosses,
     myYieldWon,
+    myStreak,
     selectedOpponent,
     myRank,
     getPlayerRank,
@@ -558,7 +559,7 @@ export default function LosslessArenaHome() {
                       setSelectedOpponent(null);
                       triggerRefetch();
                     }}
-                    myStreak={myGladiator ? Number(myGladiator[9]) : 0}
+                    myStreak={myStreak}
                     myYieldWon={myYieldWon}
                   />
                 ) : (
