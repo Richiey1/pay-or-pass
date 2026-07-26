@@ -52,8 +52,8 @@ export function usePushNotifications() {
     abi: LOSSLESS_ARENA_ABI,
     eventName: 'MegaYieldThreshold',
     onLogs(logs) {
-      logs.forEach(log => {
-        const args = log.args as any;
+      logs.forEach((log: any) => {
+        const args = log.args;
         if (args && args.amount) {
           triggerLocalNotification('MEGA YIELD ALERT!', `The prize pool has accumulated massive yield! Head to the arena now!`);
         }
@@ -68,7 +68,6 @@ export function usePushNotifications() {
         body,
         icon: '/paynpass-logo.png',
         badge: '/paynpass-logo.png',
-        vibrate: [200, 100, 200],
         data: { url: '/' }
       });
     }
