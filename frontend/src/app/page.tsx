@@ -17,6 +17,7 @@ import { useCeloPrice } from "@/hooks/useCeloPrice";
 import { useFreeFight } from "@/hooks/useFreeFight";
 import { useReferralBuff } from "@/hooks/useReferralBuff";
 import FreeFightBanner from "@/components/FreeFightBanner";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { 
   Swords, 
   Shield, 
@@ -119,6 +120,9 @@ export default function LosslessArenaHome() {
 
   // ── Feature 5: Referral Defense Buff ──────────────────────────────────────
   const referral = useReferralBuff(address);
+
+  // ── Feature 6: Push Notifications (Mega Yield Trigger) ────────────────────
+  const { subscribeToPush, isSupported, permission } = usePushNotifications();
 
   const isNativeToken = selectedToken.address === "0x471EcE3750Da237f93B8E339c536989b8978a438" || selectedToken.address === "0x0000000000000000000000000000000000000000";
 
@@ -479,6 +483,18 @@ export default function LosslessArenaHome() {
                         }
                       </button>
                     </div>
+
+                    {/* ── Feature 6: Push Notifications Enable Button ── */}
+                    {isSupported && permission !== 'granted' && (
+                      <div className="flex justify-center mb-3">
+                        <button
+                          onClick={subscribeToPush}
+                          className="text-[10px] uppercase font-bold tracking-widest px-4 py-2 rounded bg-purple-900/30 text-purple-300 border border-purple-500/30 hover:bg-purple-900/50 transition-colors"
+                        >
+                          🔔 Enable Push Alerts for Mega Yields
+                        </button>
+                      </div>
+                    )}
 
                     {/* ── Referral Defense Buff status badge ── */}
                     {referral.hasActiveBuff && (
